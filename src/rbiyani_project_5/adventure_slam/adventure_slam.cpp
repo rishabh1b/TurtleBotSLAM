@@ -7,7 +7,8 @@
 #include <pcl/sample_consensus/ransac.h>
 #include <pcl/sample_consensus/sac_model_line.h>
 #include "geometry_msgs/Point.h"
-//#include <pcl/ModelCoefficients.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/segmentation/sac_segmentation.h>
 
 #include <cmath>
 #include <vector>
@@ -16,16 +17,16 @@
 #include <string>
 
 ros::Publisher vis_pub;
-//pcl::SACSegmentation<pcl::PointXYZ> seg;
-//pcl::ModelCoefficients::Ptr coefficients;
-//pcl::PointIndices::Ptr inliers;
+pcl::SACSegmentation<pcl::PointXYZ> seg;
+pcl::ModelCoefficients::Ptr coefficients;
+pcl::PointIndices::Ptr inliers;
 
-visualization_msgs::Marker getLine(std::vector<double> end_pts, std::vector<double> dir)
+visualization_msgs::Marker getLine(std::vector<float> end_pts, std::vector<float> dir)
 {
    visualization_msgs::Marker marker;
    marker.header.frame_id = "camera_depth_frame";
    marker.header.stamp = ros::Time();
-   // marker.lifetime = rospy.Duration(1);
+   marker.lifetime = ros::Duration(1);
    marker.ns = "slam_debug_ns";
    marker.id = 0;
    marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -96,32 +97,47 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
  	cloud->points[i] = points[i];
     }
 
+    // Direct Ransac Approach requires use of Eigen Library
+    /*
     pcl::SampleConsensusModelLine<pcl::PointXYZ>::Ptr
     model_l (new pcl::SampleConsensusModelLine<pcl::PointXYZ> (cloud));
 
     pcl::RandomSampleConsensus<pcl::PointXYZ> ransac (model_l);
     ransac.setDistanceThreshold (.003);
     ransac.computeModel();
-    std::vector<int> inliers;
-    std::vector<int> model;
-    ransac.getInliers(inliers);
-    ransac.getModel(model);
+    */
+    //std::vector<int> inliers;
+    //std::vector<int> model;
+    //ransac.getInliers(inliers);
+    //ransac.getModelCoefficients(model); // Here -> requires model is returned as Eigen Vector
 
-    std::vector<double> end_pt, dir;
-    end_pt.push_back(model[1]);
-    end_pt.push_back(model[0]);
-    dir.push_back(model[4]);
-    dir.push_back(model[3]);
+    coefficients = pcl::ModelCoefficients::Ptr (new pcl::ModelCoefficients ());
+    inliers = pcl::PointIndices::Ptr (new pcl::PointIndices ());
+
+    seg.setModelType (pcl::SACMODEL_LINE);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    seg.setDistanceThreshold (0.003);
+    seg.setOptimizeCoefficients (true);
+
+    seg.setInputCloud (cloud);
+    seg.segment (*inliers, *coefficients);
+
+    std::vector<float> end_pt, dir;
+    
+    end_pt.push_back(coefficients->values[1]); //model[1]
+    end_pt.push_back(coefficients->values[0]); //model[0]
+    dir.push_back(coefficients->values[4]); //model[4]
+    dir.push_back(coefficients->values[3]); //model[3]
     mrkArr.markers.push_back(getLine(end_pt, dir));
    
     vis_pub.publish(mrkArr);
 
-    // For Debugging
-    std::string s;
+    // For Debugging values on terminal
+    /* std::string s;
     std::stringstream ss;
     ss << model[0];
     ss >> s;
-    ROS_INFO_STREAM(s);
+    ROS_INFO_STREAM(s); */
    //mrkArr.markers
 }
 

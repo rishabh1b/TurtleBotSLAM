@@ -69,7 +69,8 @@ def laser_callback(scan):
     
     ## apply RANSAC
     indices, model = seg.segment()
-    print "Found", len(indices), "inliers", model
+    #print "Found", len(indices), "inliers", model
+    print model[0]
     
     # OpenCV line fitter - least squares
     # line = cv2.fitLine(points, 2, 0, 0.01, 0.01)
