@@ -9,6 +9,7 @@
 #include "geometry_msgs/Point.h"
 #include <pcl/ModelCoefficients.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/extract_indices.h>
 
 #include <cmath>
 #include <vector>
@@ -20,15 +21,16 @@ ros::Publisher vis_pub;
 pcl::SACSegmentation<pcl::PointXYZ> seg;
 pcl::ModelCoefficients::Ptr coefficients;
 pcl::PointIndices::Ptr inliers;
+pcl::ExtractIndices<pcl::PointXYZ> eifilter(true);
 
-visualization_msgs::Marker getLine(std::vector<float> end_pts, std::vector<float> dir)
+visualization_msgs::Marker getLine(std::vector<float> end_pts, std::vector<float> dir, int id_)
 {
    visualization_msgs::Marker marker;
    marker.header.frame_id = "camera_depth_frame";
    marker.header.stamp = ros::Time();
    marker.lifetime = ros::Duration(1);
    marker.ns = "slam_debug_ns";
-   marker.id = 0;
+   marker.id = id_;
    marker.type = visualization_msgs::Marker::LINE_STRIP;
    marker.action = visualization_msgs::Marker::ADD;
    marker.pose.position.x = 0;
@@ -116,38 +118,61 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
 
     seg.setModelType (pcl::SACMODEL_LINE);
     seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setDistanceThreshold (0.003);
+    seg.setDistanceThreshold (0.003); // TODO: Put a parameter in param server for this
     seg.setOptimizeCoefficients (true);
 
-    seg.setInputCloud (cloud);
-    seg.segment (*inliers, *coefficients);
+    int num_points = (int) cloud->points.size ();
 
-    std::vector<float> end_pt, dir;
-    
-    end_pt.push_back(coefficients->values[1]); //model[1]
-    end_pt.push_back(coefficients->values[0]); //model[0]
-    dir.push_back(coefficients->values[4]); //model[4]
-    dir.push_back(coefficients->values[3]); //model[3]
-    mrkArr.markers.push_back(getLine(end_pt, dir));
+    int count = 0;
+    std::string s, s2, s3;
+    std::stringstream ss, ss2, ss3;
+ 
+    // Filtering Code Inspired From http://pointclouds.org/documentation/tutorials/extract_indices.php#extract-indices
+    while (cloud->points.size() > 0.001 * num_points)
+    {
+      count++; 
+
+      seg.setInputCloud (cloud);
+      seg.segment (*inliers, *coefficients);
+
+      if (inliers->indices.size() <= 20) // TODO: put a parameter in the param server for this
+        {
+	  break;  
+        }    
+      
+      std::vector<float> end_pt, dir; // TODO: Modification of DS to Array?
+      end_pt.push_back(coefficients->values[1]); //model[1]
+      end_pt.push_back(coefficients->values[0]); //model[0]
+      dir.push_back(coefficients->values[4]); //model[4]
+      dir.push_back(coefficients->values[3]); //model[3]
+      mrkArr.markers.push_back(getLine(end_pt, dir, count));
    
+      eifilter.setInputCloud (cloud);
+      eifilter.setIndices (inliers);
+      eifilter.setNegative (true);
+      eifilter.filter (*cloud);
+    }
+
+     //Debug
+     /* ss << count;
+     ss >> s;   
+     ROS_INFO_STREAM(s);
+
+     ss3 << mrkArr.markers.size();
+     ss3 >> s3;
+     ROS_INFO_STREAM("Markers size: " + s3);*/
+
     vis_pub.publish(mrkArr);
 
-    // For Debugging values on terminal
-    /* std::string s;
-    std::stringstream ss;
-    ss << model[0];
-    ss >> s;
-    ROS_INFO_STREAM(s); */
-   //mrkArr.markers
 }
 
 int main(int argc, char* argv[])
 {
    ros::init(argc, argv, "adventure_slam");
    ros::NodeHandle n;
-   vis_pub = n.advertise<visualization_msgs::MarkerArray>("/slam_debug", 0);
+   vis_pub = n.advertise<visualization_msgs::MarkerArray>("/slam_debug", 1);
 
-   ros::Subscriber sub = n.subscribe("/scan", 1000, &laser_callback);
+   ros::Subscriber sub = n.subscribe("/scan", 1, &laser_callback);
 
    ros::spin();
 
