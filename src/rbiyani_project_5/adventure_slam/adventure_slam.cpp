@@ -83,8 +83,11 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
             continue;
         if (isnan(r))
             continue;
-        point.x = (r * std::sin(theta));
-        point.y = (r * std::cos(theta));
+        point.x = (r * std::sin(theta)); //camera_depth_optical_frame has actually Z direction pointing forwards. 
+        point.z = (r * std::cos(theta)); //Initially, We took rather y direction pointing forwards. i.e. swap z and y and get all
+        point.y = 0;                     //co-ordinates in first two-components of the PCLXYZ object and work with 
+                                         //all are equations in X-Y Plane(rather than X-Z). It is better to work in X-Z so that
+                                         //RANSAC data can be transformed directly from camera_depth_optical frame to /odom frame
         points.push_back(point);
      }
 
@@ -141,9 +144,9 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
         }    
       
       std::vector<float> end_pt, dir; // TODO: Modification of DS to Array?
-      end_pt.push_back(coefficients->values[1]); //model[1]
-      end_pt.push_back(coefficients->values[0]); //model[0]
-      dir.push_back(coefficients->values[4]); //model[4]
+      end_pt.push_back(coefficients->values[2]); //model[2]  //Modified from 1->2 see description on camera_depth_optical_frame
+      end_pt.push_back(coefficients->values[0]); //model[0] 
+      dir.push_back(coefficients->values[5]); //model[5]  //Modified from 4->5 see description on camera_depth_optical_frame
       dir.push_back(coefficients->values[3]); //model[3]
       mrkArr.markers.push_back(getLine(end_pt, dir, count));
    
@@ -157,10 +160,9 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
      /* ss << count;
      ss >> s;   
      ROS_INFO_STREAM(s);
-
-     ss3 << mrkArr.markers.size();
-     ss3 >> s3;
-     ROS_INFO_STREAM("Markers size: " + s3);*/
+     */
+     //ss3 << cloud->header.frame_id;
+     //ROS_INFO_STREAM("Frame Id: " + s3);
 
     vis_pub.publish(mrkArr);
 
