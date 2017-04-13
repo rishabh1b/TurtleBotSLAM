@@ -13,6 +13,6 @@ public:
 	err = LineUtils::getError(l1_, l2_);
 	}
 
-    void findMatchingPairs(std::vector<Line> l_old, std::vector<Line> l_new, std::vector<LineMatcher::Pair> &matched);
+    static void BruteForceMatchingPairs(std::vector<Line> l_old, std::vector<Line> l_new, std::vector<LineMatcher::Pair> &matched);
          
 };

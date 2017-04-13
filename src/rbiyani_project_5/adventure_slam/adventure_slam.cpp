@@ -1,28 +1,20 @@
-#include "ros/ros.h"
-#include "std_msgs/String.h"
-#include "visualization_msgs/MarkerArray.h"
-#include "sensor_msgs/LaserScan.h"
-#include <pcl/point_types.h>
-#include <pcl_ros/point_cloud.h>
-#include <pcl/sample_consensus/ransac.h>
-#include <pcl/sample_consensus/sac_model_line.h>
-#include "geometry_msgs/Point.h"
-#include <pcl/ModelCoefficients.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/filters/extract_indices.h>
+#include "adventure_slam/LaserScanProcessor.h"
 
-#include <cmath>
-#include <vector>
-#include <math.h>
-#include <sstream>
-#include <string>
-
-ros::Publisher vis_pub;
+/*ros::Publisher vis_pub;
 pcl::SACSegmentation<pcl::PointXYZ> seg;
 pcl::ModelCoefficients::Ptr coefficients;
 pcl::PointIndices::Ptr inliers;
-pcl::ExtractIndices<pcl::PointXYZ> eifilter(true);
+pcl::ExtractIndices<pcl::PointXYZ> eifilter;*/
 
+LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
+{
+  this->scan_sub = n_.subscribe("/scan", 1, &laser_callback);
+
+  //Visualization Publisher will come here
+
+  //nav_msgs/odom publisher will come here
+
+}
 visualization_msgs::Marker getLine(std::vector<float> end_pts, std::vector<float> dir, int id_)
 {
    visualization_msgs::Marker marker;
@@ -63,9 +55,9 @@ visualization_msgs::Marker getLine(std::vector<float> end_pts, std::vector<float
    return marker;
 
 }
-void laser_callback(const sensor_msgs::LaserScan& scan)
+void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 {
-   visualization_msgs::MarkerArray mrkArr;
+   //visualization_msgs::MarkerArray mrkArr;
    
    // Convert the laserscan to coordinates
     float angle = scan.angle_min;
@@ -84,13 +76,20 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
         if (isnan(r))
             continue;
         point.x = (r * std::sin(theta)); //camera_depth_optical_frame has actually Z direction pointing forwards. 
-        point.z = (r * std::cos(theta)); //Initially, We took rather y direction pointing forwards. i.e. swap z and y and get all
+        point.z = (r * std::cos(theta)); //Initially, We rather took y direction pointing forwards. i.e. swap z and y and get all
         point.y = 0;                     //co-ordinates in first two-components of the PCLXYZ object and work with 
                                          //all are equations in X-Y Plane(rather than X-Z). It is better to work in X-Z so that
                                          //RANSAC data can be transformed directly from camera_depth_optical frame to /odom frame
         points.push_back(point);
      }
 
+    old_lines = curr_line_state.lines;
+    curr_lines.update(points);
+    new_lines = curr_line_state.lines;
+
+    LineMatcher::BruteForceMatchingPairs(old_lines, new_lines, &(loc.matched_pairs));
+    
+    /*
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
     cloud->width = points.size();
     cloud->height = 1;
@@ -101,7 +100,7 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
     {
  	cloud->points[i] = points[i];
     }
-
+    */
     // Direct Ransac Approach requires use of Eigen Library
     /*
     pcl::SampleConsensusModelLine<pcl::PointXYZ>::Ptr
@@ -116,6 +115,7 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
     //ransac.getInliers(inliers);
     //ransac.getModelCoefficients(model); // Here -> requires model is returned as Eigen Vector
 
+    /*
     coefficients = pcl::ModelCoefficients::Ptr (new pcl::ModelCoefficients ());
     inliers = pcl::PointIndices::Ptr (new pcl::PointIndices ());
 
@@ -154,7 +154,7 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
       eifilter.setIndices (inliers);
       eifilter.setNegative (true);
       eifilter.filter (*cloud);
-    }
+    }*/
 
      //Debug
      /* ss << count;
@@ -164,7 +164,7 @@ void laser_callback(const sensor_msgs::LaserScan& scan)
      //ss3 << cloud->header.frame_id;
      //ROS_INFO_STREAM("Frame Id: " + s3);
 
-    vis_pub.publish(mrkArr);
+    //vis_pub.publish(mrkArr);
 
 }
 
@@ -172,10 +172,11 @@ int main(int argc, char* argv[])
 {
    ros::init(argc, argv, "adventure_slam");
    ros::NodeHandle n;
-   vis_pub = n.advertise<visualization_msgs::MarkerArray>("/slam_debug", 1);
+   //vis_pub = n.advertise<visualization_msgs::MarkerArray>("/slam_debug", 1);
 
-   ros::Subscriber sub = n.subscribe("/scan", 1, &laser_callback);
+   //ros::Subscriber sub = n.subscribe("/scan", 1, &laser_callback);
 
+   LaserScanProcessor(n);
    ros::spin();
 
    return 0;
