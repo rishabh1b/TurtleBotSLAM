@@ -8,7 +8,7 @@ pcl::ExtractIndices<pcl::PointXYZ> eifilter;*/
 
 LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 {
-  this->scan_sub = n_.subscribe("/scan", 1, &laser_callback);
+  this->scan_sub = n_.subscribe("/scan", 1, &LaserScanProcessor::laser_callback, this);
 
   //Visualization Publisher will come here
 
@@ -83,11 +83,11 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
         points.push_back(point);
      }
 
-    old_lines = curr_line_state.lines;
-    curr_lines.update(points);
-    new_lines = curr_line_state.lines;
+    std::vector<Line> old_lines = curr_line_state.lines;
+    curr_line_state.update(points);
+    std::vector<Line> new_lines = curr_line_state.lines;
 
-    LineMatcher::BruteForceMatchingPairs(old_lines, new_lines, &(loc.matched_pairs));
+    LineMatcher::BruteForcePairs(old_lines, new_lines, loc.matched_pairs);
     
     /*
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
    //ros::Subscriber sub = n.subscribe("/scan", 1, &laser_callback);
 
-   LaserScanProcessor(n);
+   LaserScanProcessor lsp(n);
    ros::spin();
 
    return 0;

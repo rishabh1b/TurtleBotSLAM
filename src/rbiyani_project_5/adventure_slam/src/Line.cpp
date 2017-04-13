@@ -1,5 +1,15 @@
 #include "adventure_slam/Line.h"
-#include <cmath.h>
+#include "adventure_slam/LineUtils.h"
+#include <cmath>
+
+double Line::getError(Line l2)
+{
+  double delta_angle = this->angle - l2.angle;
+  double delta_distance = this->distance - l2.distance;
+  
+  return std::sqrt(std::pow(delta_angle,2) + std::pow(delta_distance,2));
+
+}
 
 // function borrowed from https://github.com/ncos/mipt-airdrone/blob/master/src/localization/ransac_slam/advanced_types.cpp
 void Line::correct_representation(pcl::ModelCoefficients::Ptr coefficients)
@@ -19,18 +29,18 @@ void Line::correct_representation(pcl::ModelCoefficients::Ptr coefficients)
 
     coefficients->values[3] = lx;
     coefficients->values[5] = ly;
-};
+}
 
 void Line::setParams(pcl::ModelCoefficients::Ptr coefficients)
 {
-   normalize(coefficients);
-   pt_on_line.x = coefficients[0];
-   pt_on_line.y = coefficients[1];
-   pt_on_line.z = coefficients[2];
+   correct_representation(coefficients);
+   pt_on_line.x = coefficients->values[0];
+   pt_on_line.y = coefficients->values[1];
+   pt_on_line.z = coefficients->values[2];
 
-   line_dir.x = coefficients[3];
-   line_dir.y = coefficients[4];
-   line_dir.z = coefficients[5];
+   line_dir.x = coefficients->values[3];
+   line_dir.y = coefficients->values[4];
+   line_dir.z = coefficients->values[5];
 
    LineUtils::normalize(line_dir);
 
@@ -54,5 +64,5 @@ double Line::distance_to_point(pcl::PointXYZ p1) {
     dist.z = pt_on_line.z - p1.z;
     pcl::PointXYZ d_vec = LineUtils::cross(dist, line_dir);
     return LineUtils::mag(d_vec);
-};
+}
 
