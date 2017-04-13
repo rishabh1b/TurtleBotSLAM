@@ -62,6 +62,5 @@ set(SOURCES src/adventure_slam.cpp)
 add_executable(adventure_slam_nd ${SOURCES})
 target_link_libraries(adventure_slam_nd	 LineMatcher LinesCurrentFrame ${catkin_LIBRARIES} 
 						                       ${PCL_LIBRARIES})
-add_dependencies(adventure_slam_nd sensor_msgs_generate_messages_cpp)
 add_dependencies(adventure_slam_nd ${PROJECT_NAME}_gencpp)
 
