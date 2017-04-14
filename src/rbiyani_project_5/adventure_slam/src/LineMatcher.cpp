@@ -13,19 +13,24 @@ std::vector<int> LineMatcher::BruteForcePairs(std::vector<Line> l_old, std::vect
   double thresh_matching_lines = 10; // TODO: Put a Parameter in the Parameter Server for thresh_matching_lines
   std::vector<int> indices;
   std::string s;
+  bool matching_pair_found;
   for (i = 0; i < sz1; i++)
   {
      curr_min_thresh = 10;
+     matching_pair_found = false;
      for (j = 0; j < sz2; j++)
      {
         double err_ = l_new[j].getError(l_old[i]);
         if (err_ < thresh_matching_lines && err_ < curr_min_thresh) 
            {
               LineMatcher::Pair new_pair(l_new[j], l_old[i]);
+              if(matching_pair_found)
+                 matched.erase(matched.end()); 
+
               matched.push_back(new_pair);
+              matching_pair_found = true;
               curr_min_thresh = err_;
               indices.push_back(i);
-              // Some way to remove this pair from further consideration? Should we?
              
               // debug
               std::stringstream ss;
