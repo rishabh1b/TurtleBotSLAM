@@ -13,6 +13,6 @@ public:
 	}
 };
 
- static void BruteForcePairs(std::vector<Line> l_old, std::vector<Line> l_new, std::vector<LineMatcher::Pair> &matched);
+ static std::vector<int> BruteForcePairs(std::vector<Line> l_old, std::vector<Line> l_new, std::vector<LineMatcher::Pair> &matched);
          
 };
