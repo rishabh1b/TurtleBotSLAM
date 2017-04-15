@@ -12,6 +12,7 @@
 
 
 extern double distance_threshold;
+extern int minimum_no_inliers;
 
 class LinesCurrentFrame {
 private:
