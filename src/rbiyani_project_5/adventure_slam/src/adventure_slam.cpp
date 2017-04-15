@@ -24,13 +24,15 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 {
-    std::stringstream ss;
-    std::string s;
+    std::stringstream ss, ss2, ss3, ss4;
+    std::string s, s2, s3, s4;
    // Convert the laserscan to coordinates
     float angle = scan.angle_min;
     std::vector<pcl::PointXYZ> points;
     std::vector<float> ranges = scan.ranges;
-    float theta, r;      
+    float theta, r; 
+
+    //double shift_x, shift_y, delta_yaw;     
 
     for (int i = 0; i < ranges.size(); i++ )
     {
@@ -62,13 +64,26 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     curr_line_state.setColorIndices(indices);
     //ROS_INFO_STREAM("Able to set Color Indices");
     loc.matched_pairs = matched_pairs;
+
+    loc.estimateRotation();
+    loc.estimateTranslation();
+
     // Debug
     ss << loc.matched_pairs.size();
     ss >> s;
     ROS_INFO_STREAM("matched_pairs size: " + s);
-    /*ss << new_lines.size();
-    ss >> s;
-    ROS_INFO_STREAM("new_lines size: " + s);*/
+
+    ss2 << loc.delta_yaw;
+    ss2 >> s2;
+    ROS_INFO_STREAM("Delta_Yaw: " + s2);
+
+    ss3 << loc.shift_x;
+    ss3 >> s3;
+    ROS_INFO_STREAM("Shift_x: " + s3);
+
+    ss4 << loc.shift_y;
+    ss4 >> s4;
+    ROS_INFO_STREAM("Shift_y: " + s4);
 }
 
 int main(int argc, char* argv[])

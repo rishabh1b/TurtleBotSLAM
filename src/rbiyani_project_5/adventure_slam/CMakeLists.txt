@@ -56,11 +56,16 @@ add_library(LineUtils
 
 target_link_libraries(LineUtils ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
+add_library(Localizer
+  src/Localizer.cpp
+)
+
+target_link_libraries(Localizer Line LineMatcher ${catkin_LIBRARIES})
 
 set(SOURCES src/adventure_slam.cpp)
 
 add_executable(adventure_slam_nd ${SOURCES})
-target_link_libraries(adventure_slam_nd	 LineMatcher LinesCurrentFrame ${catkin_LIBRARIES} 
+target_link_libraries(adventure_slam_nd	 LineMatcher LinesCurrentFrame Localizer ${catkin_LIBRARIES} 
 						                       ${PCL_LIBRARIES})
 add_dependencies(adventure_slam_nd ${PROJECT_NAME}_gencpp)
 
