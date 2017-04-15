@@ -1,9 +1,13 @@
 #include "adventure_slam/LaserScanProcessor.h"
 
+bool turn_on_visualization;
+
+
+
 LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 {
   this->scan_sub = n_.subscribe("/scan", 1, &LaserScanProcessor::laser_callback, this);
-  this->curr_line_state = LinesCurrentFrame(true); //TODO: A boolean in parameter server to turn visualization on or off
+  this->curr_line_state = LinesCurrentFrame(turn_on_visualization); //TODO: A boolean in parameter server to turn visualization on or off
 
   std::vector<int> v;
   v.push_back(0);
@@ -75,7 +79,7 @@ int main(int argc, char* argv[])
 {
    ros::init(argc, argv, "adventure_slam");
    ros::NodeHandle n;
-
+   if (!n.getParam("adventure_slam/turn_on_visualization", turn_on_visualization)) turn_on_visualization = true;
    LaserScanProcessor lsp(n);
    ros::spin();
 
