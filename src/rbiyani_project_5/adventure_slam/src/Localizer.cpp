@@ -25,6 +25,8 @@ void Localizer::estimateRotation()
      del_yaw = del_yaw / sz;
 
   delta_yaw += del_yaw;
+  if (delta_yaw >= 360)
+     delta_yaw = delta_yaw - 360;
   //return delta_yaw;
 }
 
