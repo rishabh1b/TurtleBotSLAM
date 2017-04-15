@@ -10,6 +10,9 @@
 #include <vector>
 //#include "geometry_msgs/Point.h"
 
+
+extern double distance_threshold;
+
 class LinesCurrentFrame {
 private:
 pcl::SACSegmentation<pcl::PointXYZ> seg;

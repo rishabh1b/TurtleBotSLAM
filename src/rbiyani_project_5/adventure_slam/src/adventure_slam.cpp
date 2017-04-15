@@ -2,7 +2,7 @@
 
 bool turn_on_visualization;
 double matching_line_threshold;
-
+double distance_threshold;
 
 LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 {
@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
    ros::NodeHandle n;
    if (!n.getParam("adventure_slam/turn_on_visualization", turn_on_visualization)) turn_on_visualization = true;
    if (!n.getParam("adventure_slam/matching_line_threshold", matching_line_threshold)) matching_line_threshold = 10;
+   if (!n.getParam("adventure_slam/distance_threshold", distance_threshold)) distance_threshold = 0.003;
    LaserScanProcessor lsp(n);
    ros::spin();
 

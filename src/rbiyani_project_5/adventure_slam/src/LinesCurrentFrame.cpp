@@ -8,9 +8,8 @@ LinesCurrentFrame::LinesCurrentFrame(bool visualize)
 
   this->seg.setModelType (pcl::SACMODEL_LINE);
   this->seg.setMethodType (pcl::SAC_RANSAC);
-  this->seg.setDistanceThreshold (0.003); // TODO: Put a parameter in param server for this
+  this->seg.setDistanceThreshold (distance_threshold); // TODO: Put a parameter in param server for this
   this->seg.setOptimizeCoefficients (true);
-
   this->curr_cloud =  pcl::PointCloud<pcl::PointXYZ>::Ptr (new pcl::PointCloud<pcl::PointXYZ>);
   
   this->vis_lines = visualize;
