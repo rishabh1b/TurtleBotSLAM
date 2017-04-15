@@ -1,6 +1,8 @@
 #include "adventure_slam/Line.h"
 #include <vector>
 
+extern double matching_line_threshold;
+
 class LineMatcher{
 public:
 	struct Pair{

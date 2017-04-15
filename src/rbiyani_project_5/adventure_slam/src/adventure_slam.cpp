@@ -1,14 +1,13 @@
 #include "adventure_slam/LaserScanProcessor.h"
 
 bool turn_on_visualization;
-
+double matching_line_threshold;
 
 
 LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 {
   this->scan_sub = n_.subscribe("/scan", 1, &LaserScanProcessor::laser_callback, this);
-  this->curr_line_state = LinesCurrentFrame(turn_on_visualization); //TODO: A boolean in parameter server to turn visualization on or off
-
+  this->curr_line_state = LinesCurrentFrame(turn_on_visualization); 
   std::vector<int> v;
   v.push_back(0);
   v.push_back(1);
@@ -69,7 +68,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     // Debug
     ss << loc.matched_pairs.size();
     ss >> s;
-    ROS_INFO_STREAM("matched_pairs size: " + s);
+    ROS_DEBUG("matched_pairs size: ");
     /*ss << new_lines.size();
     ss >> s;
     ROS_INFO_STREAM("new_lines size: " + s);*/
@@ -80,6 +79,7 @@ int main(int argc, char* argv[])
    ros::init(argc, argv, "adventure_slam");
    ros::NodeHandle n;
    if (!n.getParam("adventure_slam/turn_on_visualization", turn_on_visualization)) turn_on_visualization = true;
+   if (!n.getParam("adventure_slam/matching_line_threshold", matching_line_threshold)) matching_line_threshold = 10;
    LaserScanProcessor lsp(n);
    ros::spin();
 
