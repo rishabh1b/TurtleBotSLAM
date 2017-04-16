@@ -97,12 +97,6 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     // Debug
     ss << loc.matched_pairs.size();
     ss >> s;
-<<<<<<< HEAD
-    ROS_DEBUG("matched_pairs size: ");
-    /*ss << new_lines.size();
-    ss >> s;
-    ROS_INFO_STREAM("new_lines size: " + s);*/
-=======
     ROS_INFO_STREAM("matched_pairs size: " + s);
 
     ss2 << loc.delta_yaw;
@@ -178,29 +172,12 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     transform.setOrigin( v_glob);
     transform.setRotation(res);
     br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/odom_visual", "/base_footprint"));
->>>>>>> dc1886699204c93e5a415db637928d116ca4bf05
 }
 
 int main(int argc, char* argv[])
 {
    ros::init(argc, argv, "adventure_slam");
    ros::NodeHandle n;
-<<<<<<< HEAD
-   if (!n.getParam("adventure_slam/turn_on_visualization", turn_on_visualization)) turn_on_visualization = true;
-   if (!n.getParam("adventure_slam/matching_line_threshold", matching_line_threshold)) matching_line_threshold = 10;
-   if (!n.getParam("adventure_slam/distance_threshold", distance_threshold)) distance_threshold = 0.003;
-   if (!n.getParam("adventure_slam/minimum_no_inliers", minimum_no_inliers)) minimum_no_inliers = 20;
-=======
-
-   tf_map_to_odom_visual.stamp_ = ros::Time::now();
-   tf_map_to_odom_visual.frame_id_ = std::string("map");
-   tf_map_to_odom_visual.child_frame_id_ = std::string("odom_visual");
-
-   tf_map_to_odom_visual.setOrigin(tf::Vector3(0.0, 0.0, 0.0));
-   tf_map_to_odom_visual.setRotation(tf::createQuaternionFromRPY(0, 0, 0));
-
-   tf_br_.sendTransform(tf_map_to_odom_visual);
->>>>>>> dc1886699204c93e5a415db637928d116ca4bf05
    LaserScanProcessor lsp(n);
    ros::spin();
 
