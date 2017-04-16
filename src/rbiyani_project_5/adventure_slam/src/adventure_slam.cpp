@@ -42,6 +42,8 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     std::stringstream ss, ss2, ss3, ss4;
     std::string s, s2, s3, s4;
 
+    // tf broadcaster
+    static tf::TransformBroadcaster br;
    // Visual Odom message
     nav_msgs::Odometry result_pose;
 
@@ -120,7 +122,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     catch(tf::TransformException& ex) {
         ROS_ERROR("[adventure_slam]: Received an exception trying to transform a point from \"asus\" to \"base_footprint\": %s", ex.what());*/
 
-    v.setValue(loc.shift_x, loc.shift_y, 1);
+    v.setValue(loc.shift_x, loc.shift_y, 0);
     v_glob = (this->vo_fixed_to_base) * v;
 
     result_pose.pose.pose.position.x = v_glob.getX();;
@@ -161,6 +163,11 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     result_pose.header.stamp = ros::Time::now();  
 
     vo_pub.publish(result_pose);   
+
+    tf::Transform transform;
+    transform.setOrigin( v_glob);
+    transform.setRotation(res);
+    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/odom_visual", "/base_footprint"));
 }
 
 int main(int argc, char* argv[])
@@ -168,6 +175,14 @@ int main(int argc, char* argv[])
    ros::init(argc, argv, "adventure_slam");
    ros::NodeHandle n;
 
+   tf_map_to_odom_visual.stamp_ = ros::Time::now();
+   tf_map_to_odom_visual.frame_id_ = std::string("map");
+   tf_map_to_odom_visual.child_frame_id_ = std::string("odom_visual");
+
+   tf_map_to_odom_visual.setOrigin(tf::Vector3(0.0, 0.0, 0.0));
+   tf_map_to_odom_visual.setRotation(tf::createQuaternionFromRPY(0, 0, 0));
+
+   tf_br_.sendTransform(tf_map_to_odom_visual);
    LaserScanProcessor lsp(n);
    ros::spin();
 

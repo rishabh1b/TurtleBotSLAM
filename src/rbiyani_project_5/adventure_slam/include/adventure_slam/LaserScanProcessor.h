@@ -31,7 +31,6 @@ private:
    LinesCurrentFrame curr_line_state;
    Localizer loc;
    tf::TransformListener tf_listener;
-   tf::TransformBroadcaster tf_broadcaster;
    tf::StampedTransform vo_fixed_to_base;
 
 public:
