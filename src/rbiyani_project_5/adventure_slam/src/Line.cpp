@@ -2,6 +2,8 @@
 #include "adventure_slam/LineUtils.h"
 #include <cmath>
 
+#define PI 3.14159265
+
 double Line::getError(Line l2)
 {
   double delta_angle = this->angle - l2.angle;
@@ -33,7 +35,7 @@ void Line::correct_representation(pcl::ModelCoefficients::Ptr coefficients)
 
 void Line::setParams(pcl::ModelCoefficients::Ptr coefficients)
 {
-   correct_representation(coefficients);
+   // correct_representation(coefficients);
    pt_on_line.x = coefficients->values[0];
    pt_on_line.y = coefficients->values[1];
    pt_on_line.z = coefficients->values[2];
@@ -44,6 +46,25 @@ void Line::setParams(pcl::ModelCoefficients::Ptr coefficients)
 
    LineUtils::normalize(line_dir);
 
+   double a,b,c;
+   if (line_dir.x == 0)
+   {
+       a = 1;
+       b = 0;
+       c = -pt_on_line.x;
+    } 
+   else
+   {
+      a = line_dir.z / line_dir.x;
+      b = 1;
+      c = -(pt_on_line.z + a * pt_on_line.x);
+    }
+
+    this->angle = std::atan2(b, a) * 180 / PI;
+    this->distance = -c / (std::sqrt(pow(a,2) + pow(b,2)));
+
+
+   /*
    // Following Code Borrowed from https://github.com/ncos/mipt-airdrone/blob/master/src/localization/ransac_slam/advanced_types.cpp
    if (line_dir.x == 0) {
         if(line_dir.z < 0) this->angle = -90; // 5 = forward, 3 - to the right
@@ -52,8 +73,7 @@ void Line::setParams(pcl::ModelCoefficients::Ptr coefficients)
     else this->angle = atan(line_dir.z / fabs(line_dir.x))*180.0/M_PI;
     if (this->angle > 0 && line_dir.x < 0) this->angle += 90;
     if (this->angle < 0 && this->line_dir.x < 0) this->angle -= 90;
-
-    this->distance = distance_to_point(pcl::PointXYZ(0, 0, 0));
+    this->distance = distance_to_point(pcl::PointXYZ(0, 0, 0));*/
  
 }
 
