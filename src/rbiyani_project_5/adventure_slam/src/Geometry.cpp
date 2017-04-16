@@ -1,4 +1,4 @@
-#include "geometry.h"
+#include "adventure_slam/geometry.h"
 
 using namespace std;
 
@@ -77,25 +77,6 @@ vector<mypoint> bresenham(int x0 , int y0, int x1, int y1){
 	
 	return a;
 
-}
-
-
-int main(int argc, char* argv[]){
-
-	int a=atoi(argv[1]); 
-	int b=atoi(argv[2]); 
-	int c=atoi(argv[3]);
-	int d=atoi(argv[4]);
-
-	vector<mypoint> v;
-
-	v = bresenham(a,b,c,d);
-	
-	for(int i=0; i < v.size(); i++){
-	    cout<<v[i]<<endl;
-	}
-	
-	return 0;
 }
 
 

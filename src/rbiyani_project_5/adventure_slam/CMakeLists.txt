@@ -75,7 +75,7 @@ target_link_libraries(adventure_slam_nd	 LineMatcher LinesCurrentFrame Localizer
 						                       ${PCL_LIBRARIES})
 add_dependencies(adventure_slam_nd ${PROJECT_NAME}_gencpp)
 
-add_executable(map_maker_nd src/map_maker.cpp)
+add_executable(map_maker_nd src/MapMaker.cpp)
 target_link_libraries(map_maker_nd Geometry ${catkin_LIBRARIES} )
 add_dependencies(map_maker_nd ${PROJECT_NAME}_gencpp)
 

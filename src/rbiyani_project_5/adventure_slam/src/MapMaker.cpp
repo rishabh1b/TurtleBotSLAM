@@ -1,13 +1,13 @@
 #include "adventure_slam/MapMaker.h"
 
-MapMaker::MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float resolution, unsigned int size_x, unsigned int size_y, bool use_vo);
+MapMaker::MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float resolution, unsigned int size_x, unsigned int size_y, bool use_vo)
 {
-  this->laser_sub = n_.Subscribe("/scan", 1, &MapMaker::process_scan, this_;
+  this->laser_sub = n_.subscribe("/scan", 1, &MapMaker::process_scan, this);
   
   this->occu_pub = n_.advertise<nav_msgs::OccupancyGrid>("/map",10);
 
   this->origin_x = origin_x;
-  this->orgin_y = origin_y;
+  this->origin_y = origin_y;
   this->resolution = resolution;
   this->size_x = size_x;
   this->size_y = size_y;
@@ -17,13 +17,13 @@ MapMaker::MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float r
   else
     fixed_frame = "/odom";
 
-    grid.header.frame_id = fixed_frame;
-    occ_grid.info.resolution = resolution
-    occ_grid.info.width = size_x
-    occ_grid.info.height = size_y
-    occ_grid.info.origin.position.x = origin_x
-    occ_grid.info.origin.position.y = origin_y
-    occ_grid.info.origin.orientation.w = 1.0
+    occ_grid.header.frame_id = fixed_frame;
+    occ_grid.info.resolution = resolution;
+    occ_grid.info.width = size_x;
+    occ_grid.info.height = size_y;
+    occ_grid.info.origin.position.x = origin_x;
+    occ_grid.info.origin.position.y = origin_y;
+    occ_grid.info.origin.orientation.w = 1.0;
     for (int i = 0; i < size_x; i++)
     {
        for(int j = 0; j < size_y; j++)
@@ -77,40 +77,43 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
     // Fill The Grid Data
     float occ_w_x, occ_w_y, dist_x, dist_y, angle;
     int occ_g_x, occ_g_y, grid_state_x, grid_state_y, occ_ind, free_ind;
-    std::vector<int*> free_cells;
+    std::vector<mypoint> free_cells;
   
     sz = correct_ranges.size(); 
     for (int i = 0; i < sz; i++)
     {
+       // Occupied Grid Cell for Bresenham
+        to_grid(curr_state_x, curr_state_y, grid_state_x, grid_state_y);
+      
+       // Mark free cells as 0
+        free_cells = bresenham(grid_state_x, grid_state_y, occ_g_x, occ_g_y);
+        for (int k = 0; k < free_cells.size(); k++)
+        {
+           mypoint curr_point = free_cells[k];
+           free_ind = to_index(curr_point.x, curr_point.y, this->size_x);
+           this->occ_grid.data[free_ind] = 0;
+        }
+        
+        // Mark Occupied cells as 100
         angle = curr_state_theta + scanner_angles[i];
         dist_x = correct_ranges[i] * std::sin(angle);
         dist_y = correct_ranges[i] * std::cos(angle);       
         occ_w_x = curr_state_x + dist_x;
         occ_w_y = curr_state_y + dist_y;
 
-       // Occupied Grid Cell for Bresenham
-        to_grid(curr_state_x, curr_state_y, grid_state_x, grid_state_y);
-      
-       //Grid cell for the laser range
+        //Grid cell for the laser range
         to_grid(occ_w_x, occ_w_y, occ_g_x, occ_g_y); //TODO: Check whether grid co-ords are outside the size of the map?
-        
         occ_ind = to_index(occ_g_x, occ_g_y, this->size_x);
         this->occ_grid.data[occ_ind] = 100;
-        free_cells = bresenham(grid_state_x, grid_state_y, occ_g_x,occ_g_y)
-        for (int k = 0; k < free_cells.size(), k++)
-        {
-           free_ind = to_index(free_cells[k][0], free_cells[k][1], this->size_x)
-           this->occ_grid.data[free_ind] = 0
-        }
     }
 
-    occ_pub.publish(this->occ_grid);
+    occu_pub.publish(this->occ_grid);
 
 }
 
 void MapMaker::to_grid(double world_x, double world_y, int& grid_x, int& grid_y)
 {
-  convert_to_grid();
+  convert_to_grid(grid_x , grid_y, world_x, world_y, this->origin_x, this->origin_y, this->size_x, this->size_y, this->resolution);
 }
 
 int main(int argc, char* argv[])
@@ -120,7 +123,7 @@ int main(int argc, char* argv[])
 
    //TODO: Get Params for Map(like size, resolution) from the parameter server
 
-   MapMaker mm(n);
+   MapMaker mm(n, 10, 20, 0.5, 100, 100); //Passing dummy params for now
    ros::spin();
    return 0;
 }
