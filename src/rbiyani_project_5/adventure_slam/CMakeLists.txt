@@ -62,10 +62,20 @@ add_library(Localizer
 
 target_link_libraries(Localizer Line LineMatcher ${catkin_LIBRARIES})
 
+add_library(Geometry
+  src/Geometry.cpp
+)
+
+target_link_libraries(Geometry ${catkin_LIBRARIES})
+
 set(SOURCES src/adventure_slam.cpp)
 
 add_executable(adventure_slam_nd ${SOURCES})
 target_link_libraries(adventure_slam_nd	 LineMatcher LinesCurrentFrame Localizer ${catkin_LIBRARIES} 
 						                       ${PCL_LIBRARIES})
 add_dependencies(adventure_slam_nd ${PROJECT_NAME}_gencpp)
+
+add_executable(map_maker_nd src/map_maker.cpp)
+target_link_libraries(map_maker_nd Geometry ${catkin_LIBRARIES} )
+add_dependencies(map_maker_nd ${PROJECT_NAME}_gencpp)
 
