@@ -16,7 +16,22 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   curr_line_state.setColorIndices(v);
 
   try {
-         this->tf_listener.waitForTransform( "/base_footprint","/camera_depth_optical_frame",ros::Time(0), ros::Duration(10.0) );
+         this->tf_listener_depth_footprint.waitForTransform( "/base_footprint","/camera_depth_optical_frame",ros::Time(0), ros::Duration(10.0) );
+     }
+  catch (tf::TransformException &ex) {
+            ROS_ERROR("[adventure_slam]: (wait) %s", ex.what());
+            ros::Duration(1.0).sleep();
+  }
+
+    try {
+        this->tf_listener_depth_footprint.lookupTransform("/base_footprint","/camera_depth_optical_frame", ros::Time(0), (this->vo_fixed_to_base));
+     }
+    catch (tf::TransformException &ex) {
+        ROS_ERROR("[adventure_slam]: (lookup) %s", ex.what());
+    }
+
+   try {
+         this->tf_listener_odom_footprint.waitForTransform( "/odom","/base_footprint",ros::Time(0), ros::Duration(10.0) );
      }
   catch (tf::TransformException &ex) {
             ROS_ERROR("[adventure_slam]: (wait) %s", ex.what());
@@ -28,6 +43,12 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 
   //nav_msgs/odom publisher will come here
   this->vo_pub = n.advertise<nav_msgs::Odometry>("/vo",1);
+
+  //Initialize the odom_visual to odom Broadcaster
+  tf::Transform transform;
+  transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+  transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
+  br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
 }
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
@@ -36,7 +57,8 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     std::string s, s2, s3, s4;
 
     // tf broadcaster
-    static tf::TransformBroadcaster br;
+    //static tf::TransformBroadcaster br_vo_bf;
+    //static tf::TransformBroadcaster br_vo_o;
    // Visual Odom message
     nav_msgs::Odometry result_pose;
 
@@ -45,7 +67,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     std::vector<pcl::PointXYZ> points;
     std::vector<float> ranges = scan.ranges;
     float theta, r; 
-    tf::Vector3 v, v_glob;
+    tf::Vector3 v, v_glob, v_glob_vo;
 
     //double shift_x, shift_y, delta_yaw;     
 
@@ -84,7 +106,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     loc.estimateTranslation();
 
     // Debug
-    ss << loc.matched_pairs.size();
+    /*ss << loc.matched_pairs.size();
     ss >> s;
     ROS_INFO_STREAM("matched_pairs size: " + s);
 
@@ -98,7 +120,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 
     ss4 << loc.shift_y;
     ss4 >> s4;
-    ROS_INFO_STREAM("Shift_y: " + s4);
+    ROS_INFO_STREAM("Shift_y: " + s4);*/
 
     /*
     geometry_msgs::PointStamped vo_pose, vo_pose_fixed;
@@ -116,33 +138,30 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
         ROS_ERROR("[adventure_slam]: Received an exception trying to transform a point from \"asus\" to \"base_footprint\": %s", ex.what());*/
 
 
-    // This Transform is from optical_depth(moving) to base_footprint(also moving) as such this will gave stationary results
-    /*
-    try {
-        this->tf_listener.lookupTransform("/base_footprint","/camera_depth_optical_frame", ros::Time(0), (this->vo_fixed_to_base));
-     }
-    catch (tf::TransformException &ex) {
-        ROS_ERROR("[adventure_slam]: (lookup) %s", ex.what());
-    }*/
-
-    // v.setValue(loc.shift_x, loc.shift_y, 0);
-    //v_glob = (this->vo_fixed_to_base) * v;
-
     // Should be simply this-
-    v_glob.setX(loc.shift_y);
-    v_glob.setY(-loc.shift_x);
-    v_glob.setZ(0);
+    v_glob.setX(loc.shift_x);
+    v_glob.setZ(loc.shift_y);
+    v_glob.setY(0);
+
+    // Publishing the other way round - base_footprint to odom
+    //v_glob.setX(-loc.shift_y);
+    //v_glob.setY(loc.shift_x);
+    //v_glob.setZ(0);
 
     //TODO: Need to transform v_glob to base_footprint - static transform-will be only translation
     // For now robot's pose point is taken to be as the point on the optical depth sensor
+    v_glob_vo = (this->vo_fixed_to_base) * v_glob;
 
-    result_pose.pose.pose.position.x = v_glob.getX();;
-    result_pose.pose.pose.position.y = v_glob.getY();
+    result_pose.pose.pose.position.x = v_glob_vo.getX();;
+    result_pose.pose.pose.position.y = v_glob_vo.getY();
     result_pose.pose.pose.position.z = 0;
 
     //tf::Quaternion res = vo_fixed_to_base.getRotation() * tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
-    tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
-    tf::quaternionTFToMsg(res, result_pose.pose.pose.orientation);
+      tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
+
+    //Publishing the other way round
+    //tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, -loc.delta_yaw);
+    //tf::quaternionTFToMsg(res, result_pose.pose.pose.orientation);
 
     // EKF stuff
     /*
@@ -170,16 +189,30 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     result_pose.twist.twist.linear.x  = 0;
     result_pose.twist.twist.linear.y  = 0;
     result_pose.twist.twist.linear.z  = 0;
-    result_pose.child_frame_id  = "/base_footprint"; 
-    result_pose.header.frame_id = "/odom_visual";
+    result_pose.child_frame_id  = "/base_footprint";
+    result_pose.header.frame_id =  "/odom_visual"; 
     result_pose.header.stamp = ros::Time::now();  
 
     vo_pub.publish(result_pose);   
 
-    tf::Transform transform;
-    transform.setOrigin( v_glob);
-    transform.setRotation(res);
-    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/odom_visual", "/base_footprint"));
+    tf::Transform base_to_ov;
+    base_to_ov.setOrigin( v_glob_vo);
+    base_to_ov.setRotation(res);
+    br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov, ros::Time::now(), "/odom_visual", "/base_footprint"));
+
+    //Get the Odometry Stuff
+    tf::StampedTransform base_to_odom;
+ try {
+        this->tf_listener_odom_footprint.lookupTransform("/odom","/base_footprint", ros::Time(0), base_to_odom);
+     }
+    catch (tf::TransformException &ex) {
+        ROS_ERROR("[adventure_slam]: (lookup) %s", ex.what());
+    }
+
+    tf::Transform odom_to_ov;
+    odom_to_ov = base_to_ov * base_to_odom.inverse();
+    br_vo_o.sendTransform(tf::StampedTransform(odom_to_ov, ros::Time::now(), "/odom_visual", "/odom"));
+ 
 }
 
 int main(int argc, char* argv[])

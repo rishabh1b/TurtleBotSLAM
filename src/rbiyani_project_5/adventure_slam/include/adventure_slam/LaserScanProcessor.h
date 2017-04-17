@@ -30,7 +30,10 @@ private:
    ros::Publisher vis_pub, vo_pub;
    LinesCurrentFrame curr_line_state;
    Localizer loc;
-   tf::TransformListener tf_listener;
+   tf::TransformListener tf_listener_depth_footprint;
+   tf::TransformListener tf_listener_odom_footprint;
+   tf::TransformBroadcaster br_vo_bf;
+   tf::TransformBroadcaster br_vo_o;
    // Transform Visual Odometry Data from camera_depth_frame to base_footprint
    tf::StampedTransform vo_fixed_to_base;
 
