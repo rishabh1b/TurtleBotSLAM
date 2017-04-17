@@ -16,7 +16,7 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   curr_line_state.setColorIndices(v);
 
   try {
-         this->tf_listener.waitForTransform("/camera_depth_optical_frame", "/base_footprint",ros::Time(0), ros::Duration(10.0) );
+         this->tf_listener.waitForTransform( "/base_footprint","/camera_depth_optical_frame",ros::Time(0), ros::Duration(10.0) );
      }
   catch (tf::TransformException &ex) {
             ROS_ERROR("[adventure_slam]: (wait) %s", ex.what());
@@ -115,21 +115,33 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     catch(tf::TransformException& ex) {
         ROS_ERROR("[adventure_slam]: Received an exception trying to transform a point from \"asus\" to \"base_footprint\": %s", ex.what());*/
 
+
+    // This Transform is from optical_depth(moving) to base_footprint(also moving) as such this will gave stationary results
+    /*
     try {
-        this->tf_listener.lookupTransform("/camera_depth_optical_frame", "/base_footprint", ros::Time(0), (this->vo_fixed_to_base));
+        this->tf_listener.lookupTransform("/base_footprint","/camera_depth_optical_frame", ros::Time(0), (this->vo_fixed_to_base));
      }
     catch (tf::TransformException &ex) {
         ROS_ERROR("[adventure_slam]: (lookup) %s", ex.what());
-    }
+    }*/
 
-    v.setValue(loc.shift_x, loc.shift_y, 0);
-    v_glob = (this->vo_fixed_to_base) * v;
+    // v.setValue(loc.shift_x, loc.shift_y, 0);
+    //v_glob = (this->vo_fixed_to_base) * v;
+
+    // Should be simply this-
+    v_glob.setX(loc.shift_y);
+    v_glob.setY(-loc.shift_x);
+    v_glob.setZ(0);
+
+    //TODO: Need to transform v_glob to base_footprint - static transform-will be only translation
+    // For now robot's pose point is taken to be as the point on the optical depth sensor
 
     result_pose.pose.pose.position.x = v_glob.getX();;
     result_pose.pose.pose.position.y = v_glob.getY();
     result_pose.pose.pose.position.z = 0;
 
-    tf::Quaternion res = vo_fixed_to_base.getRotation() * tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
+    //tf::Quaternion res = vo_fixed_to_base.getRotation() * tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
+    tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
     tf::quaternionTFToMsg(res, result_pose.pose.pose.orientation);
 
     // EKF stuff
@@ -158,8 +170,8 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     result_pose.twist.twist.linear.x  = 0;
     result_pose.twist.twist.linear.y  = 0;
     result_pose.twist.twist.linear.z  = 0;
-    result_pose.child_frame_id  = "/base_footprint";
-    result_pose.header.frame_id = "/camera_depth_optical_frame";
+    result_pose.child_frame_id  = "/base_footprint"; 
+    result_pose.header.frame_id = "/odom_visual";
     result_pose.header.stamp = ros::Time::now();  
 
     vo_pub.publish(result_pose);   

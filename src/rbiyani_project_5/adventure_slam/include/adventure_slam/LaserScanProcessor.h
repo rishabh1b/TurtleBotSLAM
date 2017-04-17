@@ -31,6 +31,7 @@ private:
    LinesCurrentFrame curr_line_state;
    Localizer loc;
    tf::TransformListener tf_listener;
+   // Transform Visual Odometry Data from camera_depth_frame to base_footprint
    tf::StampedTransform vo_fixed_to_base;
 
 public:

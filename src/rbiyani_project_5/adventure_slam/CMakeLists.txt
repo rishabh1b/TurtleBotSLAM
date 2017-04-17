@@ -69,3 +69,6 @@ target_link_libraries(adventure_slam_nd	 LineMatcher LinesCurrentFrame Localizer
 						                       ${PCL_LIBRARIES})
 add_dependencies(adventure_slam_nd ${PROJECT_NAME}_gencpp)
 
+add_executable(odom_visual_broadcaster src/odom_visual_broadcaster.cpp)
+target_link_libraries(odom_visual_broadcaster ${catkin_LIBRARIES})
+

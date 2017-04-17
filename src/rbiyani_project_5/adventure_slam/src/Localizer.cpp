@@ -7,7 +7,7 @@
 Localizer::Localizer()
 {
   this->shift_x = 0;
-  this->shift_y = 0;
+  this->shift_y = 0; //TODO: Should be shift_z actually
   this->delta_yaw = 0;
 }
 
