@@ -10,7 +10,7 @@ class MapMaker{
 private:
 ros::Subscriber laser_sub;
 ros::Publisher occu_pub;
-nav_msgs::OccupancyGrid occ_grid;
+nav_msgs::OccupancyGrid* occ_grid;
 tf::TransformListener tf_listener;
 tf::StampedTransform transform;
 

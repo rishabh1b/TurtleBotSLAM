@@ -7,6 +7,11 @@ void convert_to_grid(int &grid_x , int &grid_y, double x, double y, double origi
 		grid_x = floor((x - origin_x)/resolution);
 		grid_y = floor((y - origin_y)/resolution);
 	}
+        else
+        {
+           grid_x = NAN;
+           grid_y = NAN;
+         }
 }
 
 void convert_to_world(double &x, double &y, int grid_x, int grid_y, double origin_x, double origin_y, int size_x, int size_y, float resolution){
