@@ -93,8 +93,8 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
     for (int i = 0; i < sz; i++)
     {
         angle = curr_state_theta + scanner_angles[i];
-        dist_x = correct_ranges[i] * std::sin(angle);
-        dist_y = correct_ranges[i] * std::cos(angle);       
+        dist_x = correct_ranges[i] * std::cos(angle);
+        dist_y = correct_ranges[i] * std::sin(angle);       
         occ_w_x = curr_state_x + dist_x;
         occ_w_y = curr_state_y + dist_y;
 
