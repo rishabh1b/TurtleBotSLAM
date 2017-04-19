@@ -75,9 +75,9 @@ void Localizer::estimate()
     curr_shift_y = curr_shift_y / count;
   }
 
-  if(std::abs(curr_shift_x) > 0.001)
+  if(std::abs(curr_shift_x) > 0.01)
     shift_x += curr_shift_x;
-  if(std::abs(curr_shift_y) > 0.001)
+  if(std::abs(curr_shift_y) > 0.01)
     shift_y += curr_shift_y; 
 
 }
