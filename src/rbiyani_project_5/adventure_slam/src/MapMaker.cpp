@@ -1,4 +1,5 @@
 #include "adventure_slam/MapMaker.h"
+#include <sstream>
 
 MapMaker::MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float resolution, unsigned int size_x, unsigned int size_y, bool use_vo)
 {
@@ -62,6 +63,12 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
        correct_ranges.push_back(ranges[i]);
        scanner_angles.push_back(scan.angle_min + i * scan.angle_increment);
      }
+     /*
+     stringstream ss;
+     string s;
+     ss << scan.angle_min;
+     ss >> s;
+     ROS_INFO_STREAM("Minimum scan angle: " +  s);*/
 
     // Get the Global Pose
     try {
@@ -98,17 +105,26 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
         occ_w_x = curr_state_x + dist_x;
         occ_w_y = curr_state_y + dist_y;
 
+        if (scanner_angles[i] >=0 && scanner_angles[i] < 0.1)
+        {
+          ROS_INFO("correct_ranges_mid: %f", correct_ranges[i]);
+          ROS_INFO("dist_x: %f", dist_x);
+          ROS_INFO("dist_y: %f", dist_y);
+        }
+
         //Grid cell for the laser range
         to_grid(occ_w_x, occ_w_y, occ_g_x, occ_g_y); 
         if (isnan(occ_g_x) || isnan(occ_g_y))
             continue;
-            
+        
        // Mark free cells as 0
         free_cells = bresenham(grid_state_x, grid_state_y, occ_g_x, occ_g_y);
         for (int k = 0; k < free_cells.size(); k++)
         {
            mypoint curr_point = free_cells[k];
            free_ind = to_index(curr_point.x, curr_point.y, this->size_x);
+           if (free_ind >=0 && free_ind < size_x * size_y && this->occ_grid->data[free_ind] == 100)
+               break;
            if (free_ind >=0 && free_ind < size_x * size_y)
                this->occ_grid->data[free_ind] = 0;
         }
@@ -118,6 +134,12 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
         if (occ_ind >=0 && occ_ind < size_x * size_y)
              this->occ_grid->data[occ_ind] = 100;
     }
+    //ROS_INFO("dist_x: %f", dist_x);
+    //ROS_INFO("dist_y: %f", dist_y);  
+    //ROS_INFO("occ_w_x: %f", occ_w_x); 
+    //ROS_INFO("occ_w_y: %f", occ_w_y);
+    //ROS_INFO("occ_g_x: %d", occ_g_x);
+    //ROS_INFO("occ_g_y: %d", occ_g_y);
     occu_pub.publish(*(this->occ_grid));
 }
 
@@ -134,7 +156,9 @@ int main(int argc, char* argv[])
 
    //TODO: Get Params for Map(like size, resolution) from the parameter server
 
+
    MapMaker mm(n, -20, -20, 0.1, 100, 100); //Passing dummy params for now
+
    ros::spin();
    return 0;
 }
