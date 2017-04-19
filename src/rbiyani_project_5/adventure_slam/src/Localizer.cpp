@@ -48,7 +48,17 @@ void Localizer::estimate()
     LineMatcher::Pair curr_pair = matched_pairs[i];
     first_distance = curr_pair.L1.distance - curr_pair.L2.distance;
     first_angle = (curr_pair.L1.angle + curr_pair.L2.angle) / 2;
-    first_angle = first_angle * PI / 180;
+    if ((abs(first_angle) > 0 && abs(first_angle) < 10) || (abs(first_angle) > 80 && abs(first_angle) < 100) || (abs(first_angle) > 170 && abs(first_angle) < 190)) 
+    {
+      first_angle = first_angle * PI / 180;
+
+       curr_shift_x += first_distance * std::cos(first_angle);
+       curr_shift_y += first_distance * std::sin(first_angle);
+       count++;
+    }
+  }
+
+    /* Following logic used Line Intersection Logic
     if (sz == 1)
     {
        curr_shift_x += first_distance * std::cos(first_angle);
@@ -67,7 +77,7 @@ void Localizer::estimate()
        curr_shift_y += getYEstimate(first_distance, first_angle, second_distance, sec_angle);
        count++;
     }
-   }
+   }*/
   
   if (count != 0)    
   { 
@@ -75,9 +85,9 @@ void Localizer::estimate()
     curr_shift_y = curr_shift_y / count;
   }
 
-  if(std::abs(curr_shift_x) > 0.01)
+  //if(std::abs(curr_shift_x) > 0.01)
     shift_x += curr_shift_x;
-  if(std::abs(curr_shift_y) > 0.01)
+  //if(std::abs(curr_shift_y) > 0.01)
     shift_y += curr_shift_y; 
 
 }
