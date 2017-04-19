@@ -16,7 +16,7 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   curr_line_state.setColorIndices(v);
 
   try {
-         this->tf_listener_depth_footprint.waitForTransform( "/base_footprint","/camera_depth_optical_frame",ros::Time(0), ros::Duration(10.0) );
+         this->tf_listener_depth_footprint.waitForTransform( "/base_footprint","/camera_depth_optical_frame",ros::Time(0), ros::Duration(20.0) );
      }
   catch (tf::TransformException &ex) {
             ROS_ERROR("[adventure_slam]: (wait) %s", ex.what());
@@ -45,10 +45,10 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   this->vo_pub = n.advertise<nav_msgs::Odometry>("/vo",1);
 
   //Initialize the odom_visual to odom Broadcaster
-  tf::Transform transform;
-  transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
-  transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
-  br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
+  //tf::Transform transform;
+  //transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+  //transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
+  //br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
 }
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
@@ -102,17 +102,18 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     //ROS_INFO_STREAM("Able to set Color Indices");
     loc.matched_pairs = matched_pairs;
 
-    loc.estimateRotation();
-    loc.estimateTranslation();
+    //loc.estimateRotation();
+    //loc.estimateTranslation();
 
+    loc.estimate();
     // Debug
     /*ss << loc.matched_pairs.size();
     ss >> s;
-    ROS_INFO_STREAM("matched_pairs size: " + s);
+    ROS_INFO_STREAM("matched_pairs size: " + s);*/
 
-    ss2 << loc.delta_yaw;
+    /*ss2 << loc.delta_yaw;
     ss2 >> s2;
-    ROS_INFO_STREAM("Delta_Yaw: " + s2);
+    ROS_INFO_STREAM("Delta_Yaw: " + s2);*/
 
     ss3 << loc.shift_x;
     ss3 >> s3;
@@ -120,7 +121,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 
     ss4 << loc.shift_y;
     ss4 >> s4;
-    ROS_INFO_STREAM("Shift_y: " + s4);*/
+    ROS_INFO_STREAM("Shift_y: " + s4);
 
     /*
     geometry_msgs::PointStamped vo_pose, vo_pose_fixed;
@@ -152,12 +153,30 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     // For now robot's pose point is taken to be as the point on the optical depth sensor
     v_glob_vo = (this->vo_fixed_to_base) * v_glob;
 
-    result_pose.pose.pose.position.x = v_glob_vo.getX();;
+    //Correct for the difference in origin
+    v_glob_vo.setX(v_glob_vo.getX() - vo_fixed_to_base.getOrigin().x()); 
+    v_glob_vo.setY(v_glob_vo.getY() - vo_fixed_to_base.getOrigin().y());
+    v_glob_vo.setZ(0);
+
+    ss << v_glob_vo.getX();
+    ss >> s;
+    ROS_INFO_STREAM("Glob_X " + s);
+
+    ss2 << v_glob_vo.getY();
+    ss2 >> s2;
+    ROS_INFO_STREAM("Glob_Y: " + s2);
+
+    /*
+    ss3 << v_glob_vo.getZ();
+    ss3 >> s3;
+    ROS_INFO_STREAM("Glob_z: " + s3);*/
+
+    result_pose.pose.pose.position.x = v_glob_vo.getX();
     result_pose.pose.pose.position.y = v_glob_vo.getY();
     result_pose.pose.pose.position.z = 0;
 
-    //tf::Quaternion res = vo_fixed_to_base.getRotation() * tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
-      tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, loc.delta_yaw);
+     //tf::Quaternion res = vo_fixed_to_base.getRotation() * tf::createQuaternionFromRPY(0,loc.delta_yaw,0);
+     tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, -loc.delta_yaw);
 
     //Publishing the other way round
     //tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, -loc.delta_yaw);
@@ -198,7 +217,6 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     tf::Transform base_to_ov;
     base_to_ov.setOrigin( v_glob_vo);
     base_to_ov.setRotation(res);
-    br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov, ros::Time::now(), "/odom_visual", "/base_footprint"));
 
     //Get the Odometry Stuff
     tf::StampedTransform base_to_odom;
@@ -211,7 +229,11 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 
     tf::Transform odom_to_ov;
     odom_to_ov = base_to_ov * base_to_odom.inverse();
-    br_vo_o.sendTransform(tf::StampedTransform(odom_to_ov, ros::Time::now(), "/odom_visual", "/odom"));
+    //br_vo_o.sendTransform(tf::StampedTransform(odom_to_ov, ros::Time::now(), "/odom_visual", "/odom"));
+    //br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov, ros::Time::now(), "/odom_visual", "/base_footprint"));
+   
+    //Attach base_footprint to odom_visual directly
+    br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov.inverse(), ros::Time::now(), "/base_footprint", "/odom_visual"));
  
 }
 

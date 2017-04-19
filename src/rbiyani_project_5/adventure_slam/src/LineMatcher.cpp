@@ -23,7 +23,7 @@ std::vector<int> LineMatcher::BruteForcePairs(std::vector<Line> l_old, std::vect
         double err_ = l_new[j].getError(l_old[i]);
         if (err_ < thresh_matching_lines && err_ < curr_min_thresh) 
            {
-              LineMatcher::Pair new_pair(l_new[j], l_old[i]);
+              LineMatcher::Pair new_pair(l_old[j], l_new[i]);
               if(matching_pair_found)
                  matched.erase(matched.end()); 
 
@@ -36,7 +36,7 @@ std::vector<int> LineMatcher::BruteForcePairs(std::vector<Line> l_old, std::vect
               std::stringstream ss;
               ss << curr_min_thresh;
               ss >> s;
-              ROS_INFO_STREAM("Curr_Minimum_Threshold: " + s);
+              //ROS_INFO_STREAM("Curr_Minimum_Threshold: " + s);
             }
       }
 
