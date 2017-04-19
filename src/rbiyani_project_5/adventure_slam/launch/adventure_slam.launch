@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node pkg="adventure_slam" name="adventure_slam" type="map_maker_nd">
+    <rosparam file="$(find adventure_slam)/param.yaml" command="load" ns = "/" />
+    <param name="turn_on_visualization"              value="true"/>
+
+</node>
+
+</launch>
