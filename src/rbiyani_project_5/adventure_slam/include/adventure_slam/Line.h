@@ -14,7 +14,6 @@ void setParams(pcl::ModelCoefficients::Ptr coefficients);
 double getError(Line l2);
 
 private:
-void correct_representation(pcl::ModelCoefficients::Ptr coefficients);
 double distance_to_point(pcl::PointXYZ p1);
 };
 
