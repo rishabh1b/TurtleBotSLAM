@@ -21,7 +21,7 @@ std::string fixed_frame;
 
 public:
 MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float resolution, unsigned int size_x, unsigned int size_y, bool use_vo = false); 
-void process_scan(const sensor_msgs::LaserScan& scan);
+void process_scan(const sensor_msgs::LaserScan::ConstPtr& scan);
 
 private:
 void to_grid(double world_x, double world_y, int &grid_x, int& grid_y);

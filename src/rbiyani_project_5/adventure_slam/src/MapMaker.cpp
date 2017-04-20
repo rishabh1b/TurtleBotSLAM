@@ -3,9 +3,9 @@
 
 MapMaker::MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float resolution, unsigned int size_x, unsigned int size_y, bool use_vo)
 {
-  this->laser_sub = n_.subscribe("/scan", 10, &MapMaker::process_scan, this);
+  this->laser_sub = n_.subscribe("/scan", 1, &MapMaker::process_scan, this);
   
-  this->occu_pub = n_.advertise<nav_msgs::OccupancyGrid>("/map",10);
+  this->occu_pub = n_.advertise<nav_msgs::OccupancyGrid>("/map",1);
 
   this->origin_x = origin_x;
   this->origin_y = origin_y;
@@ -45,23 +45,24 @@ MapMaker::MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float r
  
 }
 
-void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
+void MapMaker::process_scan(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
    // Get the Range data and corresponding scan-angles less than range_max and greater than min
-    std::vector<float> ranges = scan.ranges;
+    std::vector<float> ranges = scan->ranges;
     int sz = ranges.size();
     std::vector<float> correct_ranges;
     std::vector<float> scanner_angles;
+
     for(int i = 0; i < sz ; i++)
     {
-       if ((ranges[i] > scan.range_max) || (ranges[i] < scan.range_min))
+       if ((ranges[i] > scan->range_max) || (ranges[i] < scan->range_min))
           continue;
 
        if (isnan(ranges[i]))
             continue;
        
        correct_ranges.push_back(ranges[i]);
-       scanner_angles.push_back(scan.angle_min + i * scan.angle_increment);
+       scanner_angles.push_back(scan->angle_min + i * scan->angle_increment);
      }
      /*
      stringstream ss;
@@ -105,15 +106,8 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
         occ_w_x = curr_state_x + dist_x;
         occ_w_y = curr_state_y + dist_y;
 
-        if (scanner_angles[i] >=0 && scanner_angles[i] < 0.1)
-        {
-          ROS_INFO("correct_ranges_mid: %f", correct_ranges[i]);
-          ROS_INFO("dist_x: %f", dist_x);
-          ROS_INFO("dist_y: %f", dist_y);
-        }
-
         //Grid cell for the laser range
-        to_grid(occ_w_x, occ_w_y, occ_g_x, occ_g_y); 
+        to_grid(occ_w_x, occ_w_y, occ_g_x, occ_g_y);
         if (isnan(occ_g_x) || isnan(occ_g_y))
             continue;
         
@@ -134,12 +128,6 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan& scan)
         if (occ_ind >=0 && occ_ind < size_x * size_y)
              this->occ_grid->data[occ_ind] = 100;
     }
-    //ROS_INFO("dist_x: %f", dist_x);
-    //ROS_INFO("dist_y: %f", dist_y);  
-    //ROS_INFO("occ_w_x: %f", occ_w_x); 
-    //ROS_INFO("occ_w_y: %f", occ_w_y);
-    //ROS_INFO("occ_g_x: %d", occ_g_x);
-    //ROS_INFO("occ_g_y: %d", occ_g_y);
     occu_pub.publish(*(this->occ_grid));
 }
 
