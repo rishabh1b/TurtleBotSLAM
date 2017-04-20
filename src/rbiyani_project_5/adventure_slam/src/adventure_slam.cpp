@@ -45,10 +45,10 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   this->vo_pub = n.advertise<nav_msgs::Odometry>("/vo",1);
 
   //Initialize the odom_visual to odom Broadcaster
-  //tf::Transform transform;
-  //transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
-  //transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
-  //br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
+  tf::Transform transform;
+  transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+  transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
+  br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
 }
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
@@ -56,9 +56,6 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     std::stringstream ss, ss2, ss3, ss4;
     std::string s, s2, s3, s4;
 
-    // tf broadcaster
-    //static tf::TransformBroadcaster br_vo_bf;
-    //static tf::TransformBroadcaster br_vo_o;
    // Visual Odom message
     nav_msgs::Odometry result_pose;
 
@@ -98,61 +95,22 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     curr_line_state.update(points);
     //TODO: Visualization controlled via external flag
     vis_pub.publish(curr_line_state.mrkArr);
-    //ROS_INFO_STREAM("Able to publish on topic");
     std::vector<Line> new_lines = curr_line_state.lines;
 
     std::vector<int> indices = LineMatcher::BruteForcePairs(old_lines, new_lines, matched_pairs);
     curr_line_state.setColorIndices(indices);
-    //ROS_INFO_STREAM("Able to set Color Indices");
     loc.matched_pairs = matched_pairs;
 
-    //loc.estimateRotation();
-    //loc.estimateTranslation();
-
     loc.estimate();
-    // Debug
-    /*ss << loc.matched_pairs.size();
-    ss >> s;
-    ROS_INFO_STREAM("matched_pairs size: " + s);*/
 
     ss2 << loc.delta_yaw;
     ss2 >> s2;
     ROS_INFO_STREAM("Delta_Yaw: " + s2);
 
-    /*
-    ss3 << loc.shift_x;
-    ss3 >> s3;
-    ROS_INFO_STREAM("Shift_x: " + s3);
-
-    ss4 << loc.shift_y;
-    ss4 >> s4;
-    ROS_INFO_STREAM("Shift_y: " + s4);*/
-
-    /*
-    geometry_msgs::PointStamped vo_pose, vo_pose_fixed;
-    vo_pose.header.frame_id = "/camera_depth_optical_frame"; // TODO: Add Parameter for the link name in Param Server
-    vo_pose.header.stamp = ros::Time();
-    vo_pose.point.x = loc.shift_x;
-    vo_pose.point.y = loc.shift_y;
-    vo_pose.point.z = 0; */
-
-     /*
-    try {
-       tf_listener.transformPoint("/base_footprint", vo_pose, vo_pose_fixed);
-    }
-    catch(tf::TransformException& ex) {
-        ROS_ERROR("[adventure_slam]: Received an exception trying to transform a point from \"asus\" to \"base_footprint\": %s", ex.what());*/
-
-
     // Should be simply this-
     v_glob.setX(loc.shift_x);
     v_glob.setZ(loc.shift_y);
     v_glob.setY(0);
-
-    // Publishing the other way round - base_footprint to odom
-    //v_glob.setX(-loc.shift_y);
-    //v_glob.setY(loc.shift_x);
-    //v_glob.setZ(0);
 
     v_glob_vo = (this->vo_fixed_to_base) * v_glob;
 
@@ -169,21 +127,12 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     ss3 >> s3;
     ROS_INFO_STREAM("Glob_Y: " + s3);
 
-    /*
-    ss3 << v_glob_vo.getZ();
-    ss3 >> s3;
-    ROS_INFO_STREAM("Glob_z: " + s3);*/
-
     result_pose.pose.pose.position.x = v_glob_vo.getX();
     result_pose.pose.pose.position.y = v_glob_vo.getY();
     result_pose.pose.pose.position.z = 0;
 
-     //tf::Quaternion res = vo_fixed_to_base.getRotation() * tf::createQuaternionFromRPY(0,loc.delta_yaw,0);
-     tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, loc.delta_yaw * M_PI / 180);
+    tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, loc.delta_yaw * M_PI / 180);
 
-    //Publishing the other way round
-    //tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, -loc.delta_yaw);
-    //tf::quaternionTFToMsg(res, result_pose.pose.pose.orientation);
 
     // EKF stuff
     /*
@@ -232,11 +181,13 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 
     tf::Transform odom_to_ov;
     odom_to_ov = base_to_ov * base_to_odom.inverse();
-    //br_vo_o.sendTransform(tf::StampedTransform(odom_to_ov, ros::Time::now(), "/odom_visual", "/odom"));
-    //br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov, ros::Time::now(), "/odom_visual", "/base_footprint"));
+    
+    /// Approach to attach odom_visual and odom
+    br_vo_o.sendTransform(tf::StampedTransform(odom_to_ov, ros::Time::now(), "/odom_visual", "/odom"));
+    br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov, ros::Time::now(), "/odom_visual", "/base_footprint"));
    
-    //Attach base_footprint to odom_visual directly
-    br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov.inverse(), ros::Time::now(), "/base_footprint", "/odom_visual"));
+    //Attach base_footprint to odom_visual directly - second approach
+    //br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov.inverse(), ros::Time::now(), "/base_footprint", "/odom_visual"));
  
 }
 
