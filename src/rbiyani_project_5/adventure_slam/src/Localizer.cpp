@@ -1,6 +1,7 @@
 #include "adventure_slam/Localizer.h"
 #include "adventure_slam/Line.h"
 #include <cmath>
+#include "ros/ros.h"
 
 #define PI 3.14159265
 
@@ -26,7 +27,7 @@ void Localizer::estimate()
   if (sz != 0)
      del_yaw = del_yaw / sz;
 
-  if (std::abs(del_yaw) > 0.01)
+  if (std::abs(del_yaw) > 0.1)
       delta_yaw += del_yaw;
 
   if (delta_yaw >= 360)
@@ -42,13 +43,15 @@ void Localizer::estimate()
   double curr_shift_x = 0, curr_shift_y = 0;
   int i, j, count = 0;
   double first_distance, first_angle, second_distance, sec_angle;
-  
+  ROS_INFO("Angle: %d", sz);
   for (i = 0; i < sz ; i++)
   {
+    //Simple Averaging approach
     LineMatcher::Pair curr_pair = matched_pairs[i];
     first_distance = curr_pair.L1.distance - curr_pair.L2.distance;
     first_angle = (curr_pair.L1.angle + curr_pair.L2.angle) / 2;
-    if ((abs(first_angle) > 0 && abs(first_angle) < 10) || (abs(first_angle) > 80 && abs(first_angle) < 100) || (abs(first_angle) > 170 && abs(first_angle) < 190)) 
+    ROS_INFO("Angle: %f", first_angle);
+    if ((abs(first_angle) > 0 && abs(first_angle) < 40) || (abs(first_angle) > 80 && abs(first_angle) < 120) || (abs(first_angle) > 160 && abs(first_angle) < 200)) 
     {
       first_angle = first_angle * PI / 180;
 
@@ -58,8 +61,8 @@ void Localizer::estimate()
     }
   }
 
-    /* Following logic used Line Intersection Logic
-    if (sz == 1)
+    // Following logic used Line Intersection Logic
+   /*if (sz == 1)
     {
        curr_shift_x += first_distance * std::cos(first_angle);
        curr_shift_y += first_distance * std::sin(first_angle);
@@ -85,9 +88,9 @@ void Localizer::estimate()
     curr_shift_y = curr_shift_y / count;
   }
 
-  //if(std::abs(curr_shift_x) > 0.01)
+  if(std::abs(curr_shift_x) > 0.001)
     shift_x += curr_shift_x;
-  //if(std::abs(curr_shift_y) > 0.01)
+  if(std::abs(curr_shift_y) > 0.001)
     shift_y += curr_shift_y; 
 
 }

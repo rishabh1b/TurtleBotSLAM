@@ -45,10 +45,10 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   this->vo_pub = n.advertise<nav_msgs::Odometry>("/vo",1);
 
   //Initialize the odom_visual to odom Broadcaster
-  tf::Transform transform;
-  transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
-  transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
-  br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
+  //tf::Transform transform;
+  //transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+  //transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
+  //br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
 }
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
@@ -66,6 +66,10 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     float angle = scan.angle_min;
     std::vector<pcl::PointXYZ> points;
     std::vector<float> ranges = scan.ranges;
+
+    // FIX: Make the ranges go reverse to support reverse camera placement
+    std::reverse(ranges.begin(),ranges.end());
+
     float theta, r; 
     tf::Vector3 v, v_glob, v_glob_vo;
 
@@ -81,7 +85,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
             continue;
         if (isnan(r))
             continue;
-        point.x = (r * std::sin(theta)); //camera_depth_optical_frame has actually Z direction pointing forwards. 
+        point.x = (-r * std::sin(theta)); //camera_depth_optical_frame has actually Z direction pointing forwards. 
         point.z = (r * std::cos(theta)); //Initially, We rather took y direction pointing forwards. i.e. swap z and y and get all
         point.y = 0;                     //co-ordinates in first two-components of the PCLXYZ object and work with 
                                          //all are equations in X-Y Plane(rather than X-Z). It is better to work in X-Z so that
@@ -150,8 +154,6 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     //v_glob.setY(loc.shift_x);
     //v_glob.setZ(0);
 
-    //TODO: Need to transform v_glob to base_footprint - static transform-will be only translation
-    // For now robot's pose point is taken to be as the point on the optical depth sensor
     v_glob_vo = (this->vo_fixed_to_base) * v_glob;
 
     //Correct for the difference in origin
@@ -177,7 +179,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     result_pose.pose.pose.position.z = 0;
 
      //tf::Quaternion res = vo_fixed_to_base.getRotation() * tf::createQuaternionFromRPY(0,loc.delta_yaw,0);
-     tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, -loc.delta_yaw * M_PI / 180);
+     tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, loc.delta_yaw * M_PI / 180);
 
     //Publishing the other way round
     //tf::Quaternion res = tf::createQuaternionFromRPY(0, 0, -loc.delta_yaw);
@@ -230,11 +232,11 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 
     tf::Transform odom_to_ov;
     odom_to_ov = base_to_ov * base_to_odom.inverse();
-    br_vo_o.sendTransform(tf::StampedTransform(odom_to_ov, ros::Time::now(), "/odom_visual", "/odom"));
-    br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov, ros::Time::now(), "/odom_visual", "/base_footprint"));
+    //br_vo_o.sendTransform(tf::StampedTransform(odom_to_ov, ros::Time::now(), "/odom_visual", "/odom"));
+    //br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov, ros::Time::now(), "/odom_visual", "/base_footprint"));
    
     //Attach base_footprint to odom_visual directly
-    //br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov.inverse(), ros::Time::now(), "/base_footprint", "/odom_visual"));
+    br_vo_bf.sendTransform(tf::StampedTransform(base_to_ov.inverse(), ros::Time::now(), "/base_footprint", "/odom_visual"));
  
 }
 
