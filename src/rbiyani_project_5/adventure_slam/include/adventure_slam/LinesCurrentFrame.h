@@ -27,7 +27,7 @@ std::vector<int> colorindices;
 bool vis_lines; // Parameter to control whether or not to display markers
 
 public:
-LinesCurrentFrame(bool visualize = false);
+LinesCurrentFrame(bool visualize = true);
 std::vector<Line> lines; //Lines visible currently
 void update(std::vector<pcl::PointXYZ> points);
 void setColorIndices(std::vector<int> indices);

@@ -8,7 +8,7 @@ LinesCurrentFrame::LinesCurrentFrame(bool visualize)
 
   this->seg.setModelType (pcl::SACMODEL_LINE);
   this->seg.setMethodType (pcl::SAC_RANSAC);
-  this->seg.setDistanceThreshold (distance_threshold); 
+  this->seg.setDistanceThreshold (0.003); //TODO: Put in param server 
   this->seg.setOptimizeCoefficients (true);
   this->curr_cloud =  pcl::PointCloud<pcl::PointXYZ>::Ptr (new pcl::PointCloud<pcl::PointXYZ>);
   
@@ -29,7 +29,7 @@ void LinesCurrentFrame::update(std::vector<pcl::PointXYZ> points)
       seg.setInputCloud (curr_cloud);
       seg.segment (*inliers, *coefficients);
 
-      if (inliers->indices.size() <= minimum_no_inliers) 
+      if (inliers->indices.size() <= 20) //TODO: Put in param server
 	  break;  
       
       Line l;
