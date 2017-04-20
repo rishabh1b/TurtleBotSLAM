@@ -53,6 +53,7 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan::ConstPtr& scan)
     std::vector<float> correct_ranges;
     std::vector<float> scanner_angles;
 
+    std::reverse(ranges.begin(),ranges.end());
     for(int i = 0; i < sz ; i++)
     {
        if ((ranges[i] > scan->range_max) || (ranges[i] < scan->range_min))
@@ -145,7 +146,7 @@ int main(int argc, char* argv[])
    //TODO: Get Params for Map(like size, resolution) from the parameter server
 
 
-   MapMaker mm(n, -20, -20, 0.1, 100, 100); //Passing dummy params for now
+   MapMaker mm(n, -20, -20, 0.25, 100, 100); //Passing dummy params for now
 
    ros::spin();
    return 0;
