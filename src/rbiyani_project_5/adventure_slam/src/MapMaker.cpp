@@ -144,7 +144,9 @@ int main(int argc, char* argv[])
 
    //TODO: Get Params for Map(like size, resolution) from the parameter server
 
-   MapMaker mm(n, -5, -5, 0.25, 100, 50); //Passing dummy params for now
+
+   MapMaker mm(n, -20, -20, 0.1, 100, 100); //Passing dummy params for now
+
    ros::spin();
    return 0;
 }
