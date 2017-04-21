@@ -3,6 +3,7 @@
 <launch>
   <!-- start Rviz -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find adventure_gazebo)/launch/adventure.rviz"/>
+  <arg name="urdf_file" value="$(find xacro)/xacro.py '$(find turtlebot_arm_description)/urdf/arm.urdf.xacro'" />
 
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
   <arg name="paused" default="false"/>
