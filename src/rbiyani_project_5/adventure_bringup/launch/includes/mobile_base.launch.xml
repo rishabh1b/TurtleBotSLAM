@@ -1,22 +1,16 @@
 <?xml version="1.0"?>
 
 <launch>
+  <!-- Turtlebot -->
+  <arg name="base"              default="$(env TURTLEBOT_BASE)"         doc="mobile base type [create, roomba]"/>
+  <arg name="serialport"        default="$(env TURTLEBOT_SERIAL_PORT)"  doc="used by create to configure the port it is connected on [/dev/ttyUSB0, /dev/ttyS0]"/>
 
-  <!-- mobile base nodelet manager -->
-  <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
-  
-  <!-- mobile base -->
-  <arg name="base"/>
-  <arg name="serialport"/>
-  <include file="$(find turtlebot_bringup)/launch/includes/$(arg base)/mobile_base.launch.xml">
-    <arg name="serialport" value="$(arg serialport)"/>
-    <arg name="manager" value="mobile_base_nodelet_manager"/>
+  <include file="$(find turtlebot_bringup)/launch/includes/mobile_base.launch.xml">
+    <arg name="base" value="$(arg base)" />
+    <arg name="serialport" value="$(arg serialport)" />
   </include>
-  
-  <!-- velocity commands multiplexer -->
-  <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
-    <param name="yaml_cfg_file" value="$(find turtlebot_bringup)/param/mux.yaml"/>
-    <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/>
-  </node>
+ 
+ <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+ </include>
 
 </launch>

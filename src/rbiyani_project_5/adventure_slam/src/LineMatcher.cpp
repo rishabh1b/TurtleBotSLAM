@@ -10,7 +10,7 @@ std::vector<int> LineMatcher::BruteForcePairs(std::vector<Line> l_old, std::vect
   
   int i = 0, j = 0;
   double curr_min_thresh;
-  double thresh_matching_lines = 10; // TODO: Put a Parameter in the Parameter Server for thresh_matching_lines
+  double thresh_matching_lines = matching_line_threshold; // TODO: Put a Parameter in the Parameter Server for thresh_matching_lines
   std::vector<int> indices;
   std::string s;
   bool matching_pair_found;
