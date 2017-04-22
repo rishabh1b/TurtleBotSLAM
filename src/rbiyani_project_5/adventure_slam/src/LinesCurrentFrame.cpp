@@ -30,7 +30,7 @@ void LinesCurrentFrame::update(std::vector<pcl::PointXYZ> points)
       seg.setInputCloud (curr_cloud);
       seg.segment (*inliers, *coefficients);
 
-      if (inliers->indices.size() <= minimum_no_inliers)
+      if (inliers->indices.size() < minimum_no_inliers)
 	  break;  
       
       Line l;

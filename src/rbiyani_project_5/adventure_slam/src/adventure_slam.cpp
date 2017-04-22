@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
    if (!n.getParam("adventure_slam/turn_on_visualization", turn_on_visualization)) turn_on_visualization = true;
    if (!n.getParam("adventure_slam/matching_line_threshold", matching_line_threshold)) matching_line_threshold = 10;
    if (!n.getParam("adventure_slam/distance_threshold", distance_threshold)) distance_threshold = 0.003;
-   if (!n.getParam("adventure_slam/minimum_no_inliers", minimum_no_inliers)) minimum_no_inliers = 20;
+   if (!n.getParam("adventure_slam/minimum_no_inliers", minimum_no_inliers)) minimum_no_inliers = 40;
    
    LaserScanProcessor lsp(n);
    ros::spin();
