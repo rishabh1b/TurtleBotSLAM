@@ -16,20 +16,36 @@ void Localizer::estimate()
 {
   //rotating = false;
   int sz = matched_pairs.size();
+  int count = 0;
+  ROS_INFO("Matched Pairs: %d", sz);
   double del_yaw = 0;
   for (int i = 0; i < sz; i++)
   {
     LineMatcher::Pair curr_pair = matched_pairs[i];
-    del_yaw += curr_pair.L2.angle - curr_pair.L1.angle;
+    if (std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35 || std::abs(curr_pair.L2.angle - curr_pair.L1.angle) < 0.01) // False values
+    {
+      /*
+      double d2 = curr_pair.L2.distance;
+      double d1 = curr_pair.L1.distance;
+      double ang2 = curr_pair.L2.angle;
+      double ang1 = curr_pair.L1.angle;
+      ROS_INFO("Bad_Pair(d_2): %lf", d2);
+      ROS_INFO("Bad_Pair(d_1): %lf", d1);
+      ROS_INFO("Bad_Pair(ang_2): %lf", ang2);
+      ROS_INFO("Bad_Pair(ang_1): %lf", ang1);*/
+      continue;
+    }
+   del_yaw += (curr_pair.L2.angle - curr_pair.L1.angle);
+   count++;
   }  
  
-  if (sz != 0)
-     del_yaw = del_yaw / sz;
+  if (count != 0)
+     del_yaw = del_yaw / count;
 
-  if (std::abs(del_yaw) > 0.1)
+  //if (std::abs(del_yaw) > 0.1)
       delta_yaw += del_yaw;
 
-  if (delta_yaw >= 360)
+  if (std::abs(delta_yaw) >= 360)
   {
     delta_yaw = delta_yaw - 360;
   }
@@ -41,8 +57,8 @@ void Localizer::estimate()
   double curr_shift_x = 0, curr_shift_y = 0;
   int i, j, count_x = 0, count_y = 0;
   double first_distance, first_angle, second_distance, sec_angle;
-  ROS_INFO("Matched Pairs: %d", sz);
-  for (i = 0; i < sz ; i++)
+  int size_max = std::min(sz,2);
+  for (i = 0; i < size_max ; i++) //sz limited to 2
   {
     //Simple Averaging approach
     LineMatcher::Pair curr_pair = matched_pairs[i];

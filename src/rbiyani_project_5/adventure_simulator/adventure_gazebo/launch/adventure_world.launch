@@ -25,6 +25,6 @@
   <!-- Spawn the robot -->
   <include file="$(find adventure_gazebo)/launch/spawn_finn.launch">
     <arg name="x" value="-12"/>
-    <arg name="y" value="-18"/>
+    <arg name="y" value="-12"/>
   </include>
 </launch>
