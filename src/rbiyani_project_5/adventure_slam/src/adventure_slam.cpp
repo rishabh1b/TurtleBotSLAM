@@ -8,7 +8,7 @@ int minimum_no_inliers ;
 LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 {
   this->scan_sub = n_.subscribe("/scan", 1, &LaserScanProcessor::laser_callback, this);
-  this->curr_line_state = LinesCurrentFrame(turn_on_visualization); //TODO: A boolean in parameter server to turn visualization on or off
+  this->curr_line_state = LinesCurrentFrame(turn_on_visualization); 
 
   std::vector<int> v;
   v.push_back(0);

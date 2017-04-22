@@ -142,11 +142,18 @@ int main(int argc, char* argv[])
 {
    ros::init(argc, argv, "map_maker");
    ros::NodeHandle n;
+   bool use_vo;
+   float resolution;
+   int map_size;
 
-   //TODO: Get Params for Map(like size, resolution) from the parameter server
+   if (!n.getParam("adventure_slam/use_vo", use_vo)) use_vo = false;
+   if (!n.getParam("adventure_slam/resolution", resolution)) resolution = 0.1;
+   if (!n.getParam("adventure_slam/map_size", map_size)) map_size = 1000;
+   
+  
 
 
-   MapMaker mm(n, -50, -50, 0.1, 1000, 1000, true); //Passing dummy params for now
+   MapMaker mm(n, -50, -50, resolution, map_size, map_size, use_vo); 
 
    ros::spin();
    return 0;

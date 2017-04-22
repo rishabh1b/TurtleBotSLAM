@@ -10,8 +10,9 @@
 
 
   <node pkg="adventure_slam" name="map_maker" type="map_maker_nd">
-    <param name="use_vo"              value="true"/>
-    <param name="use_vo"              value="true"/>
+    <param name="use_vo"              value="false"/>
+    <param name="resolution"          value="0.1"/>
+    <param name="map_size"            value="1000"/>
 
 </node>
 
