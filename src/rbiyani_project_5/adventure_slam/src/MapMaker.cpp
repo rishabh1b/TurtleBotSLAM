@@ -118,8 +118,8 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan::ConstPtr& scan)
         {
            mypoint curr_point = free_cells[k];
            free_ind = to_index(curr_point.x, curr_point.y, this->size_x);
-           if (free_ind >=0 && free_ind < size_x * size_y && this->occ_grid->data[free_ind] == 100)
-               break;
+           /*if (free_ind >=0 && free_ind < size_x * size_y && this->occ_grid->data[free_ind] == 100)
+               break;*/
            if (free_ind >=0 && free_ind < size_x * size_y)
                this->occ_grid->data[free_ind] = 0;
         }
@@ -142,11 +142,18 @@ int main(int argc, char* argv[])
 {
    ros::init(argc, argv, "map_maker");
    ros::NodeHandle n;
+   bool use_vo;
+   float resolution;
+   int map_size;
 
-   //TODO: Get Params for Map(like size, resolution) from the parameter server
+   if (!n.getParam("adventure_slam/use_vo", use_vo)) use_vo = false;
+   if (!n.getParam("adventure_slam/resolution", resolution)) resolution = 0.1;
+   if (!n.getParam("adventure_slam/map_size", map_size)) map_size = 1000;
+   
+  
 
 
-   MapMaker mm(n, -20, -20, 0.25, 100, 100); //Passing dummy params for now
+   MapMaker mm(n, -50, -50, resolution, map_size, map_size, use_vo); 
 
    ros::spin();
    return 0;

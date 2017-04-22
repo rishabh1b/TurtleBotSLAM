@@ -2,9 +2,17 @@
 
 <launch>
 
-  <node pkg="adventure_slam" name="adventure_slam" type="map_maker_nd">
+    <node pkg="adventure_slam" name="adventure_slam" type="adventure_slam_nd">
     <rosparam file="$(find adventure_slam)/param.yaml" command="load" ns = "/" />
     <param name="turn_on_visualization"              value="true"/>
+
+</node>
+
+
+  <node pkg="adventure_slam" name="map_maker" type="map_maker_nd">
+    <param name="use_vo"              value="false"/>
+    <param name="resolution"          value="0.1"/>
+    <param name="map_size"            value="1000"/>
 
 </node>
 

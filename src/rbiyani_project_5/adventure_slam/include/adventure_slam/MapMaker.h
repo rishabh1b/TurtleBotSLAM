@@ -5,6 +5,7 @@
 #include "adventure_slam/geometry.h"
 #include "geometry_msgs/Pose.h"
 
+
 class MapMaker{
 
 private:
