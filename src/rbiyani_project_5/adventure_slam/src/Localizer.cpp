@@ -14,7 +14,6 @@ Localizer::Localizer()
 
 void Localizer::estimate()
 {
-  //rotating = false;
   int sz = matched_pairs.size();
   int count = 0;
   ROS_INFO("Matched Pairs: %d", sz);
@@ -24,7 +23,7 @@ void Localizer::estimate()
     LineMatcher::Pair curr_pair = matched_pairs[i];
     if (std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35 || std::abs(curr_pair.L2.angle - curr_pair.L1.angle) < 0.01) // False values
     {
-      /*
+      /* Debugging
       double d2 = curr_pair.L2.distance;
       double d1 = curr_pair.L1.distance;
       double ang2 = curr_pair.L2.angle;
@@ -57,23 +56,40 @@ void Localizer::estimate()
   double curr_shift_x = 0, curr_shift_y = 0;
   int i, j, count_x = 0, count_y = 0;
   double first_distance, first_angle, second_distance, sec_angle;
-  int size_max = std::min(sz,2);
-  for (i = 0; i < size_max ; i++) //sz limited to 2
+  //int size_max = std::min(sz,2);
+  for (i = 0; i < sz ; i++) //sz limited to 2
   {
     //Simple Averaging approach
     LineMatcher::Pair curr_pair = matched_pairs[i];
+
+     if (std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35 || std::abs(curr_pair.L2.angle - curr_pair.L1.angle) < 0.01) // False values
+    {
+      if (std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35)
+      {
+       double d2 = curr_pair.L2.distance;
+       double d1 = curr_pair.L1.distance;
+       ROS_INFO("Bad_Pair(d_2): %lf", d2);
+       ROS_INFO("Bad_Pair(d_1): %lf", d1);
+      }
+      continue;
+    }
 
     first_distance = curr_pair.L1.distance - curr_pair.L2.distance;
 
     first_angle = (curr_pair.L1.angle + curr_pair.L2.angle) / 2;
     first_angle = first_angle * PI / 180;
 
+    double d_x = first_distance * std::cos(first_angle); 
+    double d_y = first_distance * std::sin(first_angle);
+
        curr_shift_x += first_distance * std::cos(first_angle);  
-       if (std::abs(curr_shift_x) > 0.1)
-          count_x++;
+       count_x++;
        curr_shift_y += first_distance * std::sin(first_angle);
-       if(std::abs(curr_shift_y) > 0.1)
+       if(!(std::abs(first_angle) < 10 * PI/ 180 || std::abs(first_angle) > 170 * PI / 180 ))
           count_y++;
+ 
+   ROS_INFO("curr_d_x: %lf", d_x);
+   ROS_INFO("curr_d_y: %lf", d_y);
   }
 
     // Following logic was based on Line Intersection - Didn't work out very well
@@ -97,6 +113,9 @@ void Localizer::estimate()
     }
    }*/
   
+  ROS_INFO("count_x: %d", count_x);
+  ROS_INFO("count_y: %d", count_y);
+
   if (count_x != 0)    
     curr_shift_x = curr_shift_x / count_x;
   if (count_y != 0)

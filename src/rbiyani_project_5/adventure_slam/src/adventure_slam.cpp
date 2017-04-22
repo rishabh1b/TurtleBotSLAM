@@ -124,14 +124,13 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     v_glob_vo.setY(v_glob_vo.getY() - vo_fixed_to_base.getOrigin().y());
     v_glob_vo.setZ(0);
 
-    /*
     ss << v_glob_vo.getX();
     ss >> s;
     ROS_INFO_STREAM("Glob_X " + s);
 
     ss3 << v_glob_vo.getY();
     ss3 >> s3;
-    ROS_INFO_STREAM("Glob_Y: " + s3);*/
+    ROS_INFO_STREAM("Glob_Y: " + s3);
 
     result_pose.pose.pose.position.x = v_glob_vo.getX();
     result_pose.pose.pose.position.y = v_glob_vo.getY();
