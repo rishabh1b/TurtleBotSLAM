@@ -30,7 +30,7 @@ void LinesCurrentFrame::update(std::vector<pcl::PointXYZ> points)
       seg.setInputCloud (curr_cloud);
       seg.segment (*inliers, *coefficients);
 
-      if (inliers->indices.size() <= 20) // TODO: put a parameter in the param server for this
+      if (inliers->indices.size() <= 40) // TODO: put a parameter in the param server for this
 	  break;  
       
       Line l;
