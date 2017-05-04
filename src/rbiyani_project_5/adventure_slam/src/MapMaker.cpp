@@ -36,7 +36,7 @@ MapMaker::MapMaker(ros::NodeHandle n_, double origin_x, double origin_y, float r
     ROS_INFO("Cell Count: %d", size_x*size_y);
 
     try {
-         this->tf_listener.waitForTransform(fixed_frame,"/base_footprint",ros::Time(0), ros::Duration(10.0) );
+         this->tf_listener.waitForTransform(fixed_frame,"/base_footprint",ros::Time(0), ros::Duration(50.0) );
      }
   catch (tf::TransformException &ex) {
             ROS_ERROR("[adventure_slam]: (wait) %s", ex.what());
@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
    float resolution;
    int map_size;
 
-   if (!n.getParam("adventure_slam/use_vo", use_vo)) use_vo = false;
+   if (!n.getParam("adventure_slam/use_vo", use_vo)) use_vo = true;
    if (!n.getParam("adventure_slam/resolution", resolution)) resolution = 0.1;
    if (!n.getParam("adventure_slam/map_size", map_size)) map_size = 1000;
    

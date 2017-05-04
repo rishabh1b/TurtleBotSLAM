@@ -50,10 +50,10 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   this->vo_pub = n.advertise<nav_msgs::Odometry>("/vo",1);
 
   //Initialize the odom_visual to odom Broadcaster
-  tf::Transform transform;
+  /*tf::Transform transform;
   transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
   transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
-  br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));
+  br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));*/
 }
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
    ros::init(argc, argv, "adventure_slam");
    ros::NodeHandle n;
    
-   if (!n.getParam("adventure_slam/turn_on_visualization", turn_on_visualization)) turn_on_visualization = true;
+   if (!n.getParam("adventure_slam/turn_on_visualization", turn_on_visualization)) turn_on_visualization = false;
    if (!n.getParam("adventure_slam/matching_line_threshold", matching_line_threshold)) matching_line_threshold = 10;
    if (!n.getParam("adventure_slam/distance_threshold", distance_threshold)) distance_threshold = 0.003;
    if (!n.getParam("adventure_slam/minimum_no_inliers", minimum_no_inliers)) minimum_no_inliers = 40;
