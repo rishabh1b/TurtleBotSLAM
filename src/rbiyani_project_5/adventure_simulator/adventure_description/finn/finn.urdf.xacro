@@ -9,13 +9,27 @@
 
   <xacro:include filename="$(find adventure_description)/urdf/sensors/asus_xtion_pro.urdf.xacro"/>
   <xacro:sensor_asus_xtion_pro parent="base_link" xyz="0.14 -0.02 0.1" rpy="3.14 0 0"/>
+
+    <xacro:include filename="$(find turtlebot_arm_description)/urdf/arm.xacro" />
+
+    <!-- Turtlebot arm macro: we can configure joints velocity limit and lower/upper limits
+         for the first joint (arm_shoulder_pan) to allow accessing to different operational 
+         areas, e.g. left handed vs. right handed robot -->
+    <xacro:turtlebot_arm parent="base_link" color="white" gripper_color="green"
+                   joints_vlimit="1.571" pan_llimit="-2.617" pan_ulimit="2.617">
+      <!-- Place the "floating" arm at the location it should be if mounted on a turtlebot,
+           as pick and place and other demos assume this location -->
+      <origin xyz="0 0 0.1"/>
+    </xacro:turtlebot_arm>
+
+
     <!-- origin xyz="${0} 0 0" rpy="0.0 0.0 0.0"/-->
   <!-- /xacro:sensor_asus_xtion_pro -->
 
-
-  <!-- Generic camera 
-  <xacro:include filename="$(find adventure_description)/urdf/sensors/generic_camera.urdf.xacro" />
+ 
+  <!--xacro:include filename="$(find adventure_description)/urdf/sensors/generic_camera.urdf.xacro" />
   <xacro:generic_camera name="generic_camera" parent="base_link" ros_topic="/sensors/generic_camera/image" cam_info_topic="/sensors/generic_camera/camera_info" update_rate="15" res_x="320" res_y="240" image_format="L8" hfov="75">
     <origin xyz="${base_x_size/2-camera_link/2} 0 ${base_z_size/2 + camera_link/2}" rpy="0 0 3.14"/>
-  </xacro:generic_camera>-->
+  </xacro:generic_camera-->
+
 </robot>
