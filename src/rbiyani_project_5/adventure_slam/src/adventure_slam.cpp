@@ -49,11 +49,6 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
   //nav_msgs/odom publisher will come here
   this->vo_pub = n.advertise<nav_msgs::Odometry>("/vo",1);
 
-  //Initialize the odom_visual to odom Broadcaster
-  /*tf::Transform transform;
-  transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
-  transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
-  br_vo_o.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom_visual", "odom"));*/
 }
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
@@ -91,14 +86,14 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
         point.z = (r * std::cos(theta)); //Initially, We rather took y direction pointing forwards. i.e. swap z and y and get all
         point.y = 0;                     //co-ordinates in first two-components of the PCLXYZ object and work with 
                                          //all are equations in X-Y Plane(rather than X-Z). It is better to work in X-Z so that
-                                         //RANSAC data can be transformed directly from camera_depth_optical frame to /odom frame
+                                         //RANSAC data can be transformed directly from camera_depth_optical frame to /odom_visual frame
         points.push_back(point);
      }
 
     std::vector<LineMatcher::Pair> matched_pairs;
     std::vector<Line> old_lines = curr_line_state.lines;
     curr_line_state.update(points);
-    //TODO: Visualization controlled via external flag
+
     vis_pub.publish(curr_line_state.mrkArr);
     std::vector<Line> new_lines = curr_line_state.lines;
 
@@ -107,10 +102,6 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     loc.matched_pairs = matched_pairs;
 
     loc.estimate();
-
-    ss2 << loc.delta_yaw;
-    ss2 >> s2;
-    ROS_INFO_STREAM("Delta_Yaw: " + s2);
 
     // Should be simply this-
     v_glob.setX(loc.shift_x);
@@ -123,14 +114,6 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
     v_glob_vo.setX(v_glob_vo.getX() - vo_fixed_to_base.getOrigin().x()); 
     v_glob_vo.setY(v_glob_vo.getY() - vo_fixed_to_base.getOrigin().y());
     v_glob_vo.setZ(0);
-
-    ss << v_glob_vo.getX();
-    ss >> s;
-    ROS_INFO_STREAM("Glob_X " + s);
-
-    ss3 << v_glob_vo.getY();
-    ss3 >> s3;
-    ROS_INFO_STREAM("Glob_Y: " + s3);
 
     result_pose.pose.pose.position.x = v_glob_vo.getX();
     result_pose.pose.pose.position.y = v_glob_vo.getY();

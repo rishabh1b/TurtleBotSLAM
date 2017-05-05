@@ -48,17 +48,14 @@ void LinesCurrentFrame::update(std::vector<pcl::PointXYZ> points)
       if (vis_lines)
      {
        std::vector<float> end_pt, dir;
-       end_pt.push_back(coefficients->values[2]); //model[2] //Modified from 1->2 see description on camera_depth_optical_frame
-       end_pt.push_back(coefficients->values[0]); //model[0] 
-       dir.push_back(coefficients->values[5]); //model[5]  //Modified from 4->5 see description on camera_depth_optical_frame
-       dir.push_back(coefficients->values[3]); //model[3]
+       end_pt.push_back(coefficients->values[2]); 
+       end_pt.push_back(coefficients->values[0]);  
+       dir.push_back(coefficients->values[5]); 
+       dir.push_back(coefficients->values[3]); 
        mrkArr.markers.push_back(getLine(end_pt, dir, count, colorindices[count - 1]));  
-       //ROS_INFO_STREAM("Able to Push markers");
     }
 
     }
-    //if (vis_lines)
-     //   vis_pub.publish(mrkArr);
 
 }
 
