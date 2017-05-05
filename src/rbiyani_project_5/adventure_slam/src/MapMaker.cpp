@@ -65,12 +65,6 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan::ConstPtr& scan)
        correct_ranges.push_back(ranges[i]);
        scanner_angles.push_back(scan->angle_min + i * scan->angle_increment);
      }
-     /*
-     stringstream ss;
-     string s;
-     ss << scan.angle_min;
-     ss >> s;
-     ROS_INFO_STREAM("Minimum scan angle: " +  s);*/
 
     // Get the Global Pose
     try {
@@ -80,6 +74,7 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan::ConstPtr& scan)
     catch (tf::TransformException &ex) {
       ROS_ERROR("[adventure_slam]: (lookup) %s", ex.what());
     } 
+
     double curr_state_x = transform.getOrigin().x();
     double curr_state_y = transform.getOrigin().y();
     double curr_state_theta = tf::getYaw(transform.getRotation());
@@ -118,6 +113,7 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan::ConstPtr& scan)
         {
            mypoint curr_point = free_cells[k];
            free_ind = to_index(curr_point.x, curr_point.y, this->size_x);
+           // Do not Mark already marked as occupied as free?
            /*if (free_ind >=0 && free_ind < size_x * size_y && this->occ_grid->data[free_ind] == 100)
                break;*/
            if (free_ind >=0 && free_ind < size_x * size_y)
@@ -134,7 +130,6 @@ void MapMaker::process_scan(const sensor_msgs::LaserScan::ConstPtr& scan)
 
 void MapMaker::to_grid(double world_x, double world_y, int& grid_x, int& grid_y)
 {
-  //int grid_x_new, grid_y_new;
   convert_to_grid(grid_x , grid_y, world_x, world_y, this->origin_x, this->origin_y, this->size_x, this->size_y, this->resolution);
 }
 
