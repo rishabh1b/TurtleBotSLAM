@@ -53,8 +53,6 @@ LaserScanProcessor::LaserScanProcessor(ros::NodeHandle n_)
 
 void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 {
-    std::stringstream ss, ss2, ss3, ss4;
-    std::string s, s2, s3, s4;
 
    // Visual Odom message
     nav_msgs::Odometry result_pose;
@@ -69,8 +67,7 @@ void LaserScanProcessor::laser_callback(const sensor_msgs::LaserScan& scan)
 
     float theta, r; 
     tf::Vector3 v, v_glob, v_glob_vo;
-
-    //double shift_x, shift_y, delta_yaw;     
+   
 
     for (int i = 0; i < ranges.size(); i++ )
     {

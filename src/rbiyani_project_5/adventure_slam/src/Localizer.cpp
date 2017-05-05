@@ -65,6 +65,8 @@ void Localizer::estimate()
     first_angle = first_angle * PI / 180;
 
     curr_shift_y += first_distance * std::sin(first_angle);
+    // We don't want to account for forward shift obtained through lines at angles at this margin
+    // since, these are parallel lines in the world and they do not give any idea about the forward shift. 
     if(!(std::abs(first_angle) < 10 * PI/ 180 || std::abs(first_angle) > 170 * PI / 180 ))
        count_y++;
   }
