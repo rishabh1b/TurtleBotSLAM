@@ -48,7 +48,7 @@ void Localizer::estimate()
   {
     delta_yaw = delta_yaw - 360;
   }
-  if (std::abs(del_yaw) > 1)
+  if (std::abs(del_yaw) > 0.5)
     return;
 
   int num_pairs = 0;
@@ -56,13 +56,13 @@ void Localizer::estimate()
   double curr_shift_x = 0, curr_shift_y = 0;
   int i, j, count_x = 0, count_y = 0;
   double first_distance, first_angle, second_distance, sec_angle;
-  count = 0;
-  /*for (i = 0; i < sz ; i++) 
+  int size_max = std::min(sz,2);
+  for (i = 0; i < size_max ; i++) //sz limited to 2
   {
     //Simple Averaging approach
     LineMatcher::Pair curr_pair = matched_pairs[i];
 
-     if (std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35 || std::abs(curr_pair.L2.angle - curr_pair.L1.angle) < 0.01) // False values
+     if (std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35)// || std::abs(curr_pair.L2.angle - curr_pair.L1.angle) < 0.01) // False values
     {
       if (std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35)
       {
@@ -75,6 +75,9 @@ void Localizer::estimate()
     }
 
     first_distance = curr_pair.L1.distance - curr_pair.L2.distance;
+
+    if (first_distance > 0.5)
+	continue;
 
     first_angle = (curr_pair.L1.angle + curr_pair.L2.angle) / 2;
     ROS_INFO("first_angle :%f", first_angle);
@@ -91,72 +94,36 @@ void Localizer::estimate()
  
    ROS_INFO("curr_d_x: %lf", d_x);
    ROS_INFO("curr_d_y: %lf", d_y);
-  }*/
+  }
 
-  
-    for (int i = 0; i < sz; i++)
+    // Following logic was based on Line Intersection - Didn't work out very well
+   /*if (sz == 1)
     {
-	LineMatcher::Pair curr_pair = matched_pairs[i];
-
-     if ((std::abs(curr_pair.L2.angle - curr_pair.L1.angle) > 35) || std::abs(curr_pair.L2.distance - curr_pair.L1.distance) > 10) // False values
-    {
-      continue;
+       curr_shift_x += first_distance * std::cos(first_angle);
+       curr_shift_y += first_distance * std::sin(first_angle);
+       count++;
+       break;
     }
-
-
-    if (sz == 1)
-    {
-      first_distance = curr_pair.L1.distance - curr_pair.L2.distance;
-      first_angle = (curr_pair.L1.angle + curr_pair.L2.angle) / 2;
-      first_angle = first_angle * PI / 180;
-      curr_shift_x += first_distance * std::cos(first_angle);
-      curr_shift_y += first_distance * std::sin(first_angle);
-      break;
-    }
-  
     for (j = i+1; j < sz; j ++)
     {
        LineMatcher::Pair sec_pair = matched_pairs[j];
+       second_distance = sec_pair.L1.distance - sec_pair.L2.distance;
+       sec_angle = (sec_pair.L1.angle + sec_pair.L2.angle) / 2;
+       sec_angle = sec_angle * PI / 180;
 
-       if ((std::abs(sec_pair.L2.angle - sec_pair.L1.angle) > 35) || std::abs(sec_pair.L2.distance - sec_pair.L1.distance) > 10)// False values
-      {
-         continue;
-      }
-
-      if (std::abs(sec_pair.L1.angle - curr_pair.L1.angle) < 10)
-	continue;
-
-      double x_old = getXEstimate(curr_pair.L1.distance, curr_pair.L1.angle * PI / 180, sec_pair.L1.distance, sec_pair.L1.angle * PI / 180);
-      double x_new = getXEstimate(curr_pair.L2.distance, curr_pair.L2.angle * PI / 180, sec_pair.L2.distance, sec_pair.L2.angle * PI / 180);
-      double y_old = getYEstimate(curr_pair.L1.distance, curr_pair.L1.angle * PI / 180, sec_pair.L1.distance, sec_pair.L1.angle * PI / 180);
-      double y_new = getYEstimate(curr_pair.L2.distance, curr_pair.L2.angle * PI / 180, sec_pair.L2.distance, sec_pair.L2.angle * PI / 180);
-
-      ROS_INFO("(x_old): %lf", x_old);
-      ROS_INFO("(x_new): %lf", x_new);
-      ROS_INFO("(y_old): %lf", y_old);
-      ROS_INFO("(y_new ): %lf", y_new );
-
-       curr_shift_x += (x_old - x_new);
-       curr_shift_y += (y_old - y_new);
-
-       //ROS_INFO("curr_shift_x: %f", curr_shift_x);
-       //ROS_INFO("curr_shift_y: %f", curr_shift_y);
+       curr_shift_x += getXEstimate(first_distance, first_angle, second_distance, sec_angle);
+       curr_shift_y += getYEstimate(first_distance, first_angle, second_distance, sec_angle);
        count++;
     }
-   }
+   }*/
   
+  ROS_INFO("count_x: %d", count_x);
+  ROS_INFO("count_y: %d", count_y);
 
-
-  /*if (count_x != 0)    
+  if (count_x != 0)    
     curr_shift_x = curr_shift_x / count_x;
   if (count_y != 0)
-    curr_shift_y = curr_shift_y / count_y;*/
-
-  if (count != 0)
-  {
-     curr_shift_x = curr_shift_x / count;
-     curr_shift_y = curr_shift_y / count;
-  }
+    curr_shift_y = curr_shift_y / count_y;
 
   estimateGlobalPosition(curr_shift_x, curr_shift_y);
 
@@ -168,14 +135,14 @@ void Localizer::estimateGlobalPosition(double curr_shift_x, double curr_shift_y)
      delta_yaw = 0; 
   double curr_ang = delta_yaw * M_PI / 180;
   double glob_curr_shift_x = -(std::cos(curr_ang) * curr_shift_x - std::sin(curr_ang) * curr_shift_y);
-  double glob_curr_shift_y = (std::sin(curr_ang) * curr_shift_x + std::cos(curr_ang) * curr_shift_y);
+  double glob_curr_shift_y = std::sin(curr_ang) * curr_shift_x + std::cos(curr_ang) * curr_shift_y;
   
   shift_x += glob_curr_shift_x;
   shift_y += glob_curr_shift_y;
 }
 
 // Utility Methods for Line Intersection Logic
-
+/*
 double Localizer::getXEstimate(double fir_dist, double fir_angle, double sec_dist, double sec_angle)
 {
   return  (sec_dist * std::sin(fir_angle) - fir_dist  * std::sin(sec_angle)) / std::sin(fir_angle - sec_angle);
@@ -184,4 +151,4 @@ double Localizer::getXEstimate(double fir_dist, double fir_angle, double sec_dis
 double Localizer::getYEstimate(double fir_dist, double fir_angle, double sec_dist, double sec_angle)
 {
   return (sec_dist * std::cos(fir_angle) - fir_dist * std::cos(sec_angle)) / std::sin(sec_angle - fir_angle);
-}
+}*/
